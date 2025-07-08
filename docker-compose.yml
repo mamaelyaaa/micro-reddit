@@ -4,9 +4,9 @@ services:
     hostname: postgres
     container_name: reddit-db
     environment:
-      POSTGRES_DB: ${DB__NAME}
-      POSTGRES_USER: ${DB__USERNAME}
-      POSTGRES_PASSWORD: ${DB__PASSWORD}
+      POSTGRES_DB: redditdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
       PGDATA: /var/lib/postgresql/data
     env_file:
       - .env
@@ -14,6 +14,19 @@ services:
       - "5434:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  test-database:
+    image: postgres
+    hostname: postgres-test
+    container_name: reddit-test-db
+    environment:
+      POSTGRES_DB: redditdb_pytest
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    env_file:
+      - .env
+    ports:
+      - "5434:5432"
 
 volumes:
   pgdata:

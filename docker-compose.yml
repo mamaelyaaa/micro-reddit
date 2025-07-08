@@ -1,0 +1,19 @@
+services:
+  database:
+    image: postgres
+    hostname: postgres
+    container_name: reddit-db
+    environment:
+      POSTGRES_DB: ${DB__NAME}
+      POSTGRES_USER: ${DB__USERNAME}
+      POSTGRES_PASSWORD: ${DB__PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    env_file:
+      - .env
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

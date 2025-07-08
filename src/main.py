@@ -1,7 +1,9 @@
 import uvicorn
 from fastapi import FastAPI
+from sqlalchemy import text
 
-from core.config import settings
+from core import settings
+from core.dependencies import SessionDep
 
 app = FastAPI(
     title=settings.api.title,
@@ -12,6 +14,12 @@ app = FastAPI(
 @app.get("/")
 def get_root():
     return {"message": "Api is working!"}
+
+
+@app.get("/health-check")
+async def get_db_connection(session: SessionDep):
+    pg_version = await session.scalar(text("SELECT VERSION()"))
+    return {"message": str(pg_version)}
 
 
 if __name__ == "__main__":

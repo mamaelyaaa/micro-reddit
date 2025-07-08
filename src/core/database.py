@@ -1,3 +1,4 @@
+import logging
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
@@ -5,8 +6,12 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
 )
+from asyncpg.exceptions import ConnectionDoesNotExistError, InvalidPasswordError
 
 from .config import settings
+from .exceptions import UnavailibleService
+
+logger = logging.getLogger(__name__)
 
 
 class Database:
@@ -21,7 +26,11 @@ class Database:
 
     async def session_getter(self) -> AsyncGenerator[AsyncSession, None]:
         async with self._session_factory() as session:
-            yield session
+            try:
+                yield session
+            except ConnectionDoesNotExistError as e:
+                logger.error(str(e).capitalize())
+                raise UnavailibleService(str(e).capitalize())
 
 
 db_helper = Database(url=str(settings.db.POSTGRES_DSN), echo=bool(settings.db.echo))

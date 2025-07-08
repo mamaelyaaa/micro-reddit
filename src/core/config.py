@@ -29,6 +29,11 @@ class FilesConfig(BaseModel):
     logs_file: Path = logs_dir / "app.log"
 
 
+class LogsConfig(BaseModel):
+    level: Literal["DEBUG", "INFO"] = "INFO"
+    format: str = "%(asctime)s - %(name)-16s - %(levelname)-7s - %(message)s"
+
+
 class DatabaseConfig(BaseModel):
     username: str
     password: str
@@ -54,6 +59,7 @@ class Settings(BaseSettings):
     api: ApiConfig = ApiConfig()
     run: RunConfig = RunConfig()
     files: FilesConfig = FilesConfig()
+    log: LogsConfig = LogsConfig()
 
     db: DatabaseConfig
 

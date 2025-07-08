@@ -25,6 +25,9 @@ class FilesConfig(BaseModel):
     env_file: Path = base_dir / ".env"
     env_example_file: Path = base_dir / ".env.example"
 
+    logs_dir: Path = base_dir / "logs"
+    logs_file: Path = logs_dir / "app.log"
+
 
 class DatabaseConfig(BaseModel):
     username: str

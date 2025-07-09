@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import ORJSONResponse
 from sqlalchemy import text
 
+from api import router as main_router
 from core import settings, db_helper
 from core.dependencies import SessionDep
 from core.exceptions import AppException
@@ -31,6 +32,8 @@ app = FastAPI(
     lifespan=lifespan,
     default_response_class=ORJSONResponse,
 )
+
+app.include_router(main_router)
 
 
 @app.get("/", response_model=BaseResponseSchema)

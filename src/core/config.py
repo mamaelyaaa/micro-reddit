@@ -1,8 +1,10 @@
+from datetime import timedelta
 from pathlib import Path
 from typing import Literal
 
+from authx.types import AlgorithmType, TokenLocation, SameSitePolicy
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import BaseModel, PostgresDsn
 
 
 class RunConfig(BaseModel):
@@ -53,6 +55,28 @@ class DatabaseConfig(BaseModel):
         return f"postgresql+asyncpg://{self.username}:{self.password}@{self.host}:{self.port}/{self.name}"
 
 
+class JWTConfig(BaseModel):
+    # Общая настройка
+    algorithm: AlgorithmType
+    secret_key: str
+    token_url: str = "api/auth/login"
+
+    # Токен доступа
+    access_location: TokenLocation = "headers"
+    access_expires: timedelta = timedelta(minutes=30)
+
+    # Токен обновления
+    refresh_location: TokenLocation = "cookies"
+    refresh_expires: timedelta = timedelta(days=14)
+
+    # Куки
+    cookie_http_only: bool = True
+    cookie_secure: bool = True
+    cookie_max_age: int = refresh_expires.total_seconds()
+    cookie_samesite: SameSitePolicy = "lax"
+    cookie_session: bool = False
+
+
 # class BrokerConfig(BaseModel):
 #
 #     @property
@@ -67,6 +91,7 @@ class Settings(BaseSettings):
     log: LogsConfig = LogsConfig()
 
     db: DatabaseConfig
+    jwt: JWTConfig
 
     model_config = SettingsConfigDict(
         env_file=(files.env_example_file, files.env_file),

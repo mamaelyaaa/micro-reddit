@@ -10,6 +10,9 @@ from alembic import context
 from core import settings
 from models import Base
 
+# Models
+from api.auth.users.models import User
+
 config = context.config
 
 if config.config_file_name is not None:

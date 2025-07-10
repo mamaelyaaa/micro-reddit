@@ -1,12 +1,15 @@
+import logging
 from datetime import timedelta
 from typing import Protocol
 
-from authx import TokenPayload
+from authx import TokenPayload, RequestToken
 from authx.exceptions import MissingTokenError, JWTDecodeError
 from fastapi import Request
 
 from core.exceptions import ForbiddenException, NotAuthorizedException
 from .security import security
+
+logger = logging.getLogger("jwt_service")
 
 
 class JWTServiceProtocol(Protocol):
@@ -19,49 +22,75 @@ class JWTServiceProtocol(Protocol):
     def create_refresh_token(self, uid: str, expiry: timedelta) -> str:
         pass
 
-    async def get_access_token_from_headers(self, request: Request) -> TokenPayload:
+    async def get_access_token_from_headers(
+        self, request: Request, validate: bool = True
+    ) -> TokenPayload | RequestToken:
         pass
 
-    async def get_refresh_token_from_cookies(self, request: Request) -> TokenPayload:
+    async def get_refresh_token_from_cookies(
+        self, request: Request, validate: bool = True
+    ) -> TokenPayload | RequestToken:
         pass
 
 
 class JWTService:
+
     @staticmethod
     def create_access_token(uid: str, expiry: timedelta, fresh: bool = False) -> str:
+        logger.info("Создаем токен доступа...")
         access_token = security.create_access_token(uid=uid, fresh=fresh, expiry=expiry)
         return access_token
 
     @staticmethod
     def create_refresh_token(uid: str, expiry: timedelta) -> str:
+        logger.info("Создаем токен обновления...")
         refresh_token = security.create_refresh_token(uid=uid, expiry=expiry)
         return refresh_token
 
     @staticmethod
-    async def get_access_token_from_headers(request: Request) -> TokenPayload:
+    async def get_access_token_from_headers(
+        request: Request, validate: bool = True
+    ) -> TokenPayload | RequestToken:
         try:
             token = await security.get_access_token_from_request(
                 request, locations=["headers"]
             )
-            payload = security.verify_token(token)
-            return payload
+            if validate:
+                payload = security.verify_token(token)
+                logger.debug("Токен доступа верифицирован и получен")
+                return payload
+            return token
 
-        except MissingTokenError as e:
-            raise ForbiddenException("Отсутствует токен доступа в запросе к платформе")
-        except JWTDecodeError as e:
-            raise NotAuthorizedException("Невалидный токен в запросе")
+        except MissingTokenError:
+            msg = "Отсутствует токен доступа в запросе к платформе"
+            logger.error(msg)
+            raise ForbiddenException(msg)
+
+        except JWTDecodeError:
+            msg = "Невалидный токен в запросе"
+            logger.error(msg)
+            raise NotAuthorizedException(msg)
 
     @staticmethod
-    async def get_refresh_token_from_cookies(request: Request) -> TokenPayload:
+    async def get_refresh_token_from_cookies(
+        request: Request, validate: bool = True
+    ) -> TokenPayload | RequestToken:
         try:
             token = await security.get_refresh_token_from_request(
                 request, locations=["cookies"]
             )
-            payload = security.verify_token(token, verify_csrf=False)
-            return payload
+            if validate:
+                payload = security.verify_token(token, verify_csrf=False)
+                logger.debug("Токен обновления верифицирован и получен")
+                return payload
+            return token
 
-        except MissingTokenError as e:
-            raise ForbiddenException("Отсутствует токен обновления в запросе к платформе")
+        except MissingTokenError:
+            msg = "Отсутствует токен обновления в запросе к платформе"
+            logger.error(msg)
+            raise ForbiddenException(msg)
 
-        except JWTDecodeError as e:
-            raise NotAuthorizedException("Невалидный токен в запросе")
+        except JWTDecodeError:
+            msg = "Невалидный токен в запросе"
+            logger.error(msg)
+            raise NotAuthorizedException(msg)

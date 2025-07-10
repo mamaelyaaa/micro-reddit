@@ -9,7 +9,9 @@ from models import Base, DateMixin
 class User(Base, DateMixin):
     __tablename__ = "users"
 
-    username: Mapped[str] = mapped_column(String(128))
+    repr_cols_num = 2
+
+    username: Mapped[str] = mapped_column(String(128), unique=True)
     email: Mapped[str] = mapped_column(String(128), unique=True)
     password: Mapped[Optional[str]]
 

@@ -4,15 +4,17 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, ConfigDict
 
 
-class UserBaseSchema(BaseModel):
+class UserRegisterSchema(BaseModel):
     username: str
     email: EmailStr
     password: str
     is_superuser: bool = False
 
 
-class UserCreateSchema(UserBaseSchema):
-    pass
+class UserLoginSchema(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
 
 
 class UserReadSchema(BaseModel):
@@ -29,14 +31,10 @@ class UserReadSchema(BaseModel):
 class UserUpdateSchema(BaseModel):
     username: str
     email: EmailStr
-    is_superuser: bool
-    is_active: bool
     model_config = ConfigDict(from_attributes=True)
 
 
 class UserUpdatePartialSchema(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
-    is_superuser: Optional[bool] = None
-    is_active: Optional[bool] = None
     model_config = ConfigDict(from_attributes=True)

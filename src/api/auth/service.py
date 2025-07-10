@@ -15,18 +15,21 @@ from .jwt.schemas import BearerResponseSchema
 from .jwt.security import security
 from .jwt.service import JWTService
 from .users.repository import UserRepositoryProtocol, UserRepositoryDep
-from .users.schemas import UserCreateSchema, UserReadSchema
+from .users.schemas import UserReadSchema, UserRegisterSchema, UserLoginSchema
 from .users.service import UserService, UserServiceProtocol
 
 
 class AuthServiceProtocol(UserServiceProtocol, Protocol):
 
-    async def register_user(self, user_data: UserCreateSchema) -> int:
+    async def register_user(self, user_data: UserRegisterSchema) -> int:
         pass
 
     async def login_user(
-        self, user_data: UserCreateSchema, response: Response
+        self, user_data: UserLoginSchema, response: Response
     ) -> BearerResponseSchema:
+        pass
+
+    async def logout_user(self, response: Response) -> None:
         pass
 
     async def refresh_token(self, request: Request) -> BearerResponseSchema:
@@ -47,12 +50,12 @@ class AuthService(UserService, JWTService):
     def __init__(self, session: AsyncSession, user_repo: UserRepositoryProtocol):
         super().__init__(session, user_repo)
 
-    async def register_user(self, user_data: UserCreateSchema) -> int:
+    async def register_user(self, user_data: UserRegisterSchema) -> int:
         user_id = await self.create_user(user_data)
         return user_id
 
     async def login_user(
-        self, user_data: UserCreateSchema, response: Response
+        self, user_data: UserLoginSchema, response: Response
     ) -> BearerResponseSchema:
         user = await self._get_user_by(email=user_data.email)
         if not user:
@@ -80,7 +83,12 @@ class AuthService(UserService, JWTService):
 
         return BearerResponseSchema(access_token=access_token)
 
+    async def logout_user(self, response: Response) -> None:
+        security.unset_refresh_cookies(response)
+        return
+
     async def refresh_token(self, request: Request) -> BearerResponseSchema:
+        await self.get_access_token_from_headers(request, validate=False)
         refresh_token = await self.get_refresh_token_from_cookies(request)
         new_access = self.create_access_token(
             uid=str(refresh_token.sub), expiry=settings.jwt.access_expires

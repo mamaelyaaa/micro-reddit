@@ -6,12 +6,17 @@ from core.exceptions import NotFoundException, BadRequestException
 from utils.security import hash_password
 from .models import User
 from .repository import UserRepositoryProtocol
-from .schemas import UserCreateSchema, UserUpdateSchema, UserUpdatePartialSchema
+from .schemas import (
+    UserUpdateSchema,
+    UserUpdatePartialSchema,
+    UserRegisterSchema,
+    UserLoginSchema,
+)
 
 
 class UserServiceProtocol(Protocol):
 
-    async def create_user(self, user_data: UserCreateSchema) -> int:
+    async def create_user(self, user_data: UserRegisterSchema | UserLoginSchema) -> int:
         pass
 
     async def get_user_by_user_id(self, user_id: int) -> User:
@@ -35,7 +40,7 @@ class UserService:
         self.session = session
         self.user_repo = user_repo
 
-    async def create_user(self, user_data: UserCreateSchema) -> int:
+    async def create_user(self, user_data: UserRegisterSchema | UserLoginSchema) -> int:
         exists_user = await self.user_repo.check_user_exists(
             session=self.session,
             email=user_data.email,
@@ -49,12 +54,18 @@ class UserService:
         if exists_user:
             raise BadRequestException("Данная юзернейм уже занят")
 
-        data = UserCreateSchema(
-            username=user_data.username,
-            email=user_data.email,
-            password=await hash_password(user_data.password),
-            is_superuser=user_data.is_superuser,
-        )
+        if isinstance(user_data, UserRegisterSchema):
+            data = UserRegisterSchema(username=user_data.username,
+                email=user_data.email,
+                password=await hash_password(user_data.password),
+                is_superuser=user_data.is_superuser
+            )
+        else:
+            data = UserLoginSchema(
+                username=user_data.username,
+                email=user_data.email,
+                password=await hash_password(user_data.password),
+            )
 
         user = await self.user_repo.add_one(self.session, data=data.model_dump())
         return user

@@ -1,8 +1,6 @@
-import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
-
 from fastapi import FastAPI, Request
 from fastapi.responses import ORJSONResponse
 from sqlalchemy import text
@@ -11,11 +9,7 @@ from api import router as main_router
 from core import settings, db_helper
 from core.dependencies import SessionDep
 from core.exceptions import AppException
-from core.logger import setup_logging
 from schemas import BaseResponseSchema
-
-setup_logging()
-logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager

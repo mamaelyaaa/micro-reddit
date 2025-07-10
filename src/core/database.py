@@ -1,4 +1,3 @@
-import logging
 from typing import AsyncGenerator
 
 from asyncpg.exceptions import ConnectionDoesNotExistError
@@ -10,8 +9,6 @@ from sqlalchemy.ext.asyncio import (
 
 from .config import settings
 from .exceptions import UnavailibleServiceException
-
-logger = logging.getLogger(__name__)
 
 
 class Database:
@@ -29,7 +26,6 @@ class Database:
             try:
                 yield session
             except ConnectionDoesNotExistError as e:
-                logger.error(str(e).capitalize())
                 raise UnavailibleServiceException(str(e).capitalize())
 
 

@@ -72,7 +72,7 @@ class JWTConfig(BaseModel):
     # Куки
     cookie_http_only: bool = True
     cookie_secure: bool = True
-    cookie_max_age: int = refresh_expires.total_seconds()
+    cookie_max_age: int = int(refresh_expires.total_seconds())
     cookie_samesite: SameSitePolicy = "lax"
     cookie_session: bool = False
 
@@ -102,3 +102,5 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+print(settings.jwt.cookie_max_age)

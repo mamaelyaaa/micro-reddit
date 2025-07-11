@@ -1,18 +1,18 @@
 import logging
 from datetime import timedelta
-from typing import Protocol
+from typing import Protocol, Annotated
 
 from authx import TokenPayload, RequestToken
 from authx.exceptions import MissingTokenError, JWTDecodeError
-from fastapi import Request
+from fastapi import Request, Depends
 
 from core.exceptions import ForbiddenException, NotAuthorizedException
 from .security import security
 
-logger = logging.getLogger("jwt_service")
+logger = logging.getLogger("jwt_repo")
 
 
-class JWTServiceProtocol(Protocol):
+class JWTRepositoryProtocol(Protocol):
 
     def create_access_token(
         self, uid: str, expiry: timedelta, fresh: bool = False
@@ -33,7 +33,7 @@ class JWTServiceProtocol(Protocol):
         pass
 
 
-class JWTService:
+class JWTRepository:
 
     @staticmethod
     def create_access_token(uid: str, expiry: timedelta, fresh: bool = False) -> str:
@@ -94,3 +94,10 @@ class JWTService:
             msg = "Невалидный токен в запросе"
             logger.error(msg)
             raise NotAuthorizedException(msg)
+
+
+async def get_jwt_repository() -> JWTRepositoryProtocol:
+    return JWTRepository()
+
+
+JWTRepositoryDep = Annotated[JWTRepositoryProtocol, Depends(get_jwt_repository)]

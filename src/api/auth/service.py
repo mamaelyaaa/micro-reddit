@@ -1,3 +1,4 @@
+from logging import raiseExceptions
 from typing import Protocol, Annotated
 
 from fastapi import Depends, Request, Response
@@ -15,7 +16,13 @@ from .jwt.repository import JWTRepositoryProtocol, JWTRepositoryDep
 from .jwt.schemas import BearerResponseSchema
 from .jwt.security import security
 from .users.repository import UserRepositoryProtocol, UserRepositoryDep
-from .users.schemas import UserReadSchema, UserRegisterSchema, UserLoginSchema
+from .users.schemas import (
+    UserReadSchema,
+    UserRegisterSchema,
+    UserLoginSchema,
+    UserUpdateSchema,
+    UserUpdatePartialSchema,
+)
 
 
 class AuthServiceProtocol(Protocol):
@@ -26,6 +33,14 @@ class AuthServiceProtocol(Protocol):
     async def login_user(
         self, user_data: UserLoginSchema, response: Response
     ) -> BearerResponseSchema:
+        pass
+
+    async def update_user(
+        self,
+        update_user_data: UserUpdateSchema | UserUpdatePartialSchema,
+        user_id: int,
+        partial: bool,
+    ) -> UserReadSchema:
         pass
 
     async def logout_user(self, request: Request, response: Response) -> None:
@@ -114,6 +129,20 @@ class AuthService:
         )
 
         return BearerResponseSchema(access_token=access_token)
+
+    async def update_user(
+        self,
+        update_user_data: UserUpdateSchema | UserUpdatePartialSchema,
+        user_id: int,
+        partial: bool,
+    ) -> UserReadSchema:
+        updated_user = await self.user_repo.update_user(
+            update_user_data=update_user_data, id=user_id, partial=partial
+        )
+        if not updated_user:
+            raise NotFoundException("Пользователь не найден")
+
+        return UserReadSchema.model_validate(updated_user)
 
     async def logout_user(self, request: Request, response: Response) -> None:
         await self.jwt_repo.get_access_token_from_headers(request, validate=False)

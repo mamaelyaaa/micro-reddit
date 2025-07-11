@@ -5,8 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aiobcrypt>=3.2.0.post1",
     "alembic>=1.16.2",
     "asyncpg>=0.30.0",
+    "authx>=1.4.3",
     "fastapi>=0.116.0",
     "orjson>=3.10.18",
     "pydantic-settings>=2.10.1",

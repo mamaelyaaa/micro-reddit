@@ -1,29 +1,49 @@
-from typing import Protocol, Annotated
-from fastapi import Depends
-from sqlalchemy.ext.asyncio.session import AsyncSession
-from sqlalchemy import select
+from typing import Protocol, Annotated, Optional
 
-from repository import RepositoryProtocol, SQLAlchemyRepositoryImpl
+from fastapi import Depends
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio.session import AsyncSession
+
+from core.dependencies import SessionDep
 from .models import User
 
 
-class UserRepositoryProtocol(RepositoryProtocol, Protocol):
+class UserRepositoryProtocol(Protocol):
 
-    async def check_user_exists(self, session: AsyncSession, *args, **kwargs) -> bool:
+    async def add_user(self, user_data: dict) -> int:
+        pass
+
+    async def get_user(self, *args, **kwargs) -> Optional[User]:
+        pass
+
+    async def check_user_exists(self, *args, **kwargs) -> bool:
         pass
 
 
-class UserRepository(SQLAlchemyRepositoryImpl[User]):
-    table = User
+class UserRepository:
 
-    async def check_user_exists(self, session: AsyncSession, *args, **kwargs) -> bool:
-        query = select(self.table).filter_by(**kwargs)
-        user = await session.scalar(query)
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def add_user(self, user_data: dict) -> int:
+        user = User(**user_data)
+        self.session.add(user)
+        await self.session.commit()
+        return user.id
+
+    async def get_user(self, *args, **kwargs) -> Optional[User]:
+        query = select(User).filter_by(**kwargs)
+        res = await self.session.execute(query)
+        return res.scalar_one_or_none()
+
+    async def check_user_exists(self, *args, **kwargs) -> bool:
+        query = select(User).filter_by(**kwargs)
+        user = await self.session.scalar(query)
         return True if user else False
 
 
-async def get_user_repository() -> UserRepositoryProtocol:
-    return UserRepository()
+async def get_user_repository(session: SessionDep) -> UserRepositoryProtocol:
+    return UserRepository(session)
 
 
 UserRepositoryDep = Annotated[UserRepositoryProtocol, Depends(get_user_repository)]

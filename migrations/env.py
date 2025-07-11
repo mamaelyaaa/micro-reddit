@@ -12,7 +12,6 @@ from models import Base
 
 # Models
 from api.auth.users.models import User
-from api.posts.models import Post
 
 config = context.config
 

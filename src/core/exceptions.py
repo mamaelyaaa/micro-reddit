@@ -17,11 +17,26 @@ class BadRequestException(AppException):
         super().__init__(message, status_code=status.HTTP_400_BAD_REQUEST)
 
 
+class NotAuthorizedException(AppException):
+    def __init__(self, message: str):
+        super().__init__(message, status_code=status.HTTP_401_UNAUTHORIZED)
+
+
+class ForbiddenException(AppException):
+    def __init__(self, message: str):
+        super().__init__(message, status_code=status.HTTP_403_FORBIDDEN)
+
+
+class BadValidationException(AppException):
+    def __init__(self, message: str):
+        super().__init__(message, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+
 class TooEarlyException(AppException):
     def __init__(self, message: str):
         super().__init__(message, status_code=status.HTTP_425_TOO_EARLY)
 
 
-class UnavailibleService(AppException):
+class UnavailibleServiceException(AppException):
     def __init__(self, message: str):
         super().__init__(message, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)

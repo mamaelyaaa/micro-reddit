@@ -102,5 +102,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-print(settings.jwt.cookie_max_age)

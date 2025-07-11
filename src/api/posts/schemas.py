@@ -1,11 +1,10 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class PostBaseSchema(BaseModel):
-    user_id: int
     title: str
     description: Optional[str]
 
@@ -18,3 +17,14 @@ class PostReadSchema(PostBaseSchema):
     id: int
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PostUpdateSchema(PostBaseSchema):
+    pass
+
+
+class PostUpdatePartialSchema(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None

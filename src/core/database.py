@@ -22,6 +22,7 @@ class Database:
         )
 
     async def dispose(self) -> None:
+        logger.debug("Подключение к базе данных разорвано")
         await self._engine.dispose()
 
     async def session_getter(self) -> AsyncGenerator[AsyncSession, None]:

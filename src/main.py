@@ -14,7 +14,7 @@ from core.logger import setup_logging
 from schemas import BaseResponseSchema
 
 setup_logging()
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("main")
 
 
 @asynccontextmanager

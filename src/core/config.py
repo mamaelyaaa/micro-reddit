@@ -15,7 +15,7 @@ class RunConfig(BaseModel):
 
 class ApiConfig(BaseModel):
     title: str = "c-reddit-backend"
-    version: str = "0.0.0"
+    version: str = "0.2-dev"
 
 
 class FilesConfig(BaseModel):
@@ -59,7 +59,6 @@ class JWTConfig(BaseModel):
     # Общая настройка
     algorithm: AlgorithmType
     secret_key: str
-    token_url: str = "api/auth/login"
 
     # Токен доступа
     access_location: TokenLocation = "headers"

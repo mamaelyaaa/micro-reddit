@@ -1,17 +1,15 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 
 from api.auth import ActiveUserDep
-from api.auth.service import AuthServiceDep
 from api.auth.views import http_bearer
-from api.posts.schemas import (
+from core.dependencies import PaginationDep
+from .schemas import (
     PostCreateSchema,
     PostReadSchema,
     PostUpdateSchema,
     PostUpdatePartialSchema,
 )
-from api.posts.service import PostServiceDep
-from core.dependencies import PaginationDep
-from schemas import PaginationSchema
+from .service import PostServiceDep
 
 router = APIRouter(prefix="/posts", tags=["Посты"], dependencies=[Depends(http_bearer)])
 

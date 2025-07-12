@@ -1,8 +1,9 @@
 from typing import Protocol, Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
+from api.auth.users.repository import UserRepositoryProtocol, UserRepositoryDep
 from core.dependencies import SessionDep
 from core.exceptions import BadRequestException, NotFoundException
 from schemas import PaginationSchema
@@ -13,7 +14,6 @@ from .schemas import (
     PostUpdateSchema,
     PostUpdatePartialSchema,
 )
-from ..auth.users.repository import UserRepositoryProtocol, UserRepositoryDep
 
 
 class PostServiceProtocol(Protocol):

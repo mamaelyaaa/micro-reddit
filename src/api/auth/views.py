@@ -24,7 +24,6 @@ from .users.schemas import (
 router = APIRouter(prefix="/auth", tags=["Авторизация"])
 
 http_bearer = HTTPBearer(auto_error=False)
-oauth_scheme = OAuth2PasswordBearer(tokenUrl=settings.jwt.token_url, auto_error=False)
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)

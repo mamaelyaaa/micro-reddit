@@ -1,4 +1,3 @@
-from logging import raiseExceptions
 from typing import Protocol, Annotated
 
 from fastapi import Depends, Request, Response
@@ -84,21 +83,14 @@ class AuthService:
         if exists_user_by_username:
             raise BadRequestException("Данный юзернейм уже занят")
 
-        if isinstance(user_data, UserRegisterSchema):
-            data = UserRegisterSchema(
-                username=user_data.username,
-                email=user_data.email,
-                password=await hash_password(user_data.password),
-                is_superuser=user_data.is_superuser,
-            )
-        else:
-            data = UserLoginSchema(
-                username=user_data.username,
-                email=user_data.email,
-                password=await hash_password(user_data.password),
-            )
+        data = UserRegisterSchema(
+            username=user_data.username,
+            email=user_data.email,
+            password=await hash_password(user_data.password),
+            is_superuser=user_data.is_superuser,
+        )
 
-        user = await self.user_repo.add_user(user_data=data.model_dump())
+        user = await self.user_repo.add_user(user_data=data)
         return user
 
     async def login_user(

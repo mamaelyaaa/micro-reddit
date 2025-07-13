@@ -1,3 +1,4 @@
+import logging
 from typing import Protocol, Annotated, Optional, Sequence, Literal
 
 from fastapi import Depends
@@ -8,6 +9,8 @@ from core.dependencies import SessionDep
 from core.exceptions import BadRequestException, NotFoundException
 from .models import Post
 from .schemas import PostCreateSchema, PostUpdateSchema, PostUpdatePartialSchema
+
+logger = logging.getLogger("post_repo")
 
 
 class PostRepositoryProtocol(Protocol):
@@ -49,12 +52,14 @@ class PostRepository:
 
     async def create_user_post(self, user_id: int, post_data: dict) -> int:
         post = Post(user_id=user_id, **post_data)
+        logger.debug(f"Пользователь 'user_id: {user_id}' создает пост...")
         self.session.add(post)
         await self.session.commit()
         return post.id
 
     async def get_user_post(self, user_id: int, *args, **kwargs) -> Optional[Post]:
         query = select(Post).filter_by(user_id=user_id, **kwargs)
+        logger.debug(f"Ищем пост пользователя 'user_id: {user_id}' с {kwargs} ...")
         res = await self.session.execute(query)
         return res.scalar_one_or_none()
 
@@ -68,11 +73,17 @@ class PostRepository:
     ) -> Sequence[Post]:
         query = select(Post).filter_by(user_id=user_id, **kwargs)
         query = query.limit(limit).offset(offset)
+        logger.debug(
+            f"Ищем посты пользователя 'user_id: {user_id}', {offset = }, {limit = }"
+        )
         res = await self.session.execute(query)
         return res.scalars().all()
 
     async def check_post_exists(self, user_id: int, title: str) -> bool:
         query = select(Post).filter_by(user_id=user_id, title=title)
+        logger.debug(
+            f"Проверяем существует ли пост пользователя 'user_id: {user_id}' с 'title: {title}' ..."
+        )
         res = await self.session.scalar(query)
         return True if res else False
 

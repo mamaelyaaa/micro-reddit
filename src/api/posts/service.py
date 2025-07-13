@@ -1,3 +1,4 @@
+import logging
 from typing import Protocol, Annotated
 
 from fastapi import Depends
@@ -14,6 +15,8 @@ from .schemas import (
     PostUpdateSchema,
     PostUpdatePartialSchema,
 )
+
+logger = logging.getLogger("post_service")
 
 
 class PostServiceProtocol(Protocol):
@@ -56,16 +59,19 @@ class PostService:
         self.user_repo = user_repo
 
     async def create_post(self, user_id: int, post_data: PostCreateSchema) -> int:
+        logger.info(f"Пользователь {user_id = } создает новый пост...")
         exists_post = await self.post_repo.check_post_exists(
             user_id, title=post_data.title
         )
         if exists_post:
+            logger.error(f"Пользователь {user_id = } уже имеет пост с таким названием")
             raise BadRequestException("Пост с таким названием уже существует")
 
         post_id = await self.post_repo.create_user_post(
             user_id=user_id,
             post_data=post_data.model_dump(),
         )
+        logger.info(f"Пост {post_id = } пользователя {user_id = } успешно создан!")
         return post_id
 
     async def get_post_by_post_id(self, user_id: int, post_id: int) -> PostReadSchema:

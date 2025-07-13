@@ -1,13 +1,16 @@
+import logging
 from typing import Protocol, Annotated, Optional
 
 from fastapi import Depends
-from sqlalchemy import select, or_
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from core.dependencies import SessionDep
 from core.exceptions import BadRequestException
 from .models import User
 from .schemas import UserRegisterSchema, UserUpdateSchema, UserUpdatePartialSchema
+
+logger = logging.getLogger("user_repo")
 
 
 class UserRepositoryProtocol(Protocol):
@@ -38,18 +41,20 @@ class UserRepository:
 
     async def add_user(self, user_data: UserRegisterSchema) -> int:
         user = User(**user_data.model_dump())
+        logger.debug(f"Создаем пользователя: {user}")
         self.session.add(user)
         await self.session.commit()
         return user.id
 
     async def get_user(self, *args, **kwargs) -> Optional[User]:
         query = select(User).filter_by(**kwargs)
+        logger.debug(f"Ищем пользователя {kwargs} ...")
         res = await self.session.execute(query)
         return res.scalar_one_or_none()
 
     async def check_user_exists(self, *args, **kwargs) -> bool:
         query = select(User).filter_by(**kwargs)
-
+        logger.debug(f"Проверяем существует ли пользователь с {kwargs} ...")
         user = await self.session.scalar(query)
         return True if user else False
 

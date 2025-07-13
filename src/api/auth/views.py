@@ -56,9 +56,11 @@ async def refresh_access_token(auth_service: AuthServiceDep, request: Request):
     dependencies=[Depends(http_bearer)],
 )
 async def login_user(
-    active_user: ActiveUserDep, auth_service: AuthServiceDep, response: Response
+    auth_service: AuthServiceDep,
+    response: Response,
+    request: Request,
 ):
-    await auth_service.logout_user(response)
+    await auth_service.logout_user(response, request)
     return
 
 

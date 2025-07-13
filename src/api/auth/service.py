@@ -1,3 +1,4 @@
+import logging
 from typing import Protocol, Annotated
 
 from fastapi import Depends, Request, Response
@@ -22,6 +23,9 @@ from .users.schemas import (
     UserUpdateSchema,
     UserUpdatePartialSchema,
 )
+
+
+logger = logging.getLogger("auth_service")
 
 
 class AuthServiceProtocol(Protocol):
@@ -75,13 +79,17 @@ class AuthService:
             email=user_data.email
         )
         if exists_user_by_email:
-            raise BadRequestException("Данная почта уже зарегестрирована")
+            msg = "Данная почта уже зарегистрирована"
+            logger.warning(msg)
+            raise BadRequestException(msg)
 
         exists_user_by_username = await self.user_repo.check_user_exists(
             username=user_data.username
         )
         if exists_user_by_username:
-            raise BadRequestException("Данный юзернейм уже занят")
+            msg = "Данный юзернейм уже занят"
+            logger.warning(msg)
+            raise BadRequestException(msg)
 
         data = UserRegisterSchema(
             username=user_data.username,
@@ -90,21 +98,26 @@ class AuthService:
             is_superuser=user_data.is_superuser,
         )
 
-        user = await self.user_repo.add_user(user_data=data)
-        return user
+        user_id = await self.user_repo.add_user(user_data=data)
+        logger.info(f"Пользователь {data.username} успешно зарегистрирован!")
+        return user_id
 
     async def login_user(
         self, user_data: UserLoginSchema, response: Response
     ) -> BearerResponseSchema:
         user = await self.user_repo.get_user(email=user_data.email)
         if not user:
-            raise NotFoundException("Пользователь не найден")
+            msg = "Пользователь не найден"
+            logger.warning(msg)
+            raise NotFoundException(msg)
 
         if not await verify_passwords(
             password=user_data.password,
             hash_pwd=user.password,
         ):
-            raise BadRequestException("Неправильный пароль")
+            msg = "Неправильный пароль"
+            logger.warning(msg)
+            raise BadRequestException(msg)
 
         access_token = self.jwt_repo.create_access_token(
             uid=str(user.id),
@@ -119,7 +132,7 @@ class AuthService:
             max_age=settings.jwt.cookie_max_age,
             response=response,
         )
-
+        logger.info(f"Пользователь {user} успешно аутентифицировался!")
         return BearerResponseSchema(access_token=access_token)
 
     async def update_user(
@@ -137,8 +150,11 @@ class AuthService:
         return UserReadSchema.model_validate(updated_user)
 
     async def logout_user(self, request: Request, response: Response) -> None:
-        await self.jwt_repo.get_access_token_from_headers(request, validate=False)
+        token = await self.jwt_repo.get_access_token_from_headers(
+            request, validate=False
+        )
         security.unset_refresh_cookies(response)
+        logger.info(f"Пользователь 'id={token.sub}' вышел из системы")
         return
 
     async def refresh_token(self, request: Request) -> BearerResponseSchema:

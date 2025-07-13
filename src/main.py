@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -9,8 +10,11 @@ from api import router as main_router
 from core import settings, db_helper
 from core.dependencies import SessionDep
 from core.exceptions import AppException
+from core.logger import setup_logging
 from schemas import BaseResponseSchema
 
+setup_logging()
+logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):

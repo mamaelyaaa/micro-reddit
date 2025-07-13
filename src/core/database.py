@@ -1,3 +1,4 @@
+import logging
 from typing import AsyncGenerator
 
 from asyncpg.exceptions import ConnectionDoesNotExistError
@@ -10,6 +11,8 @@ from sqlalchemy.ext.asyncio import (
 from .config import settings
 from .exceptions import UnavailibleServiceException
 
+logger = logging.getLogger(__name__)
+
 
 class Database:
     def __init__(self, url: str, echo: bool):
@@ -19,6 +22,7 @@ class Database:
         )
 
     async def dispose(self) -> None:
+        logger.info("Подключение к базе данных разорвано")
         await self._engine.dispose()
 
     async def session_getter(self) -> AsyncGenerator[AsyncSession, None]:

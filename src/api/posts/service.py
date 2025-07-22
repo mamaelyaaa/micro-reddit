@@ -8,6 +8,7 @@ from api.auth.users.repository import UserRepositoryProtocol, UserRepositoryDep
 from core.dependencies import SessionDep
 from core.exceptions import BadRequestException, NotFoundException
 from schemas import PaginationSchema
+from .exceptions import PostNotFoundException, PostAlreadyExist
 from .repository import PostRepositoryProtocol, PostRepositoryDep
 from .schemas import (
     PostCreateSchema,
@@ -59,13 +60,12 @@ class PostService:
         self.user_repo = user_repo
 
     async def create_post(self, user_id: int, post_data: PostCreateSchema) -> int:
-        logger.info(f"Пользователь {user_id = } создает новый пост...")
         exists_post = await self.post_repo.check_post_exists(
             user_id, title=post_data.title
         )
         if exists_post:
             logger.error(f"Пользователь {user_id = } уже имеет пост с таким названием")
-            raise BadRequestException("Пост с таким названием уже существует")
+            raise PostAlreadyExist
 
         post_id = await self.post_repo.create_user_post(
             user_id=user_id,
@@ -77,14 +77,14 @@ class PostService:
     async def get_post_by_post_id(self, user_id: int, post_id: int) -> PostReadSchema:
         post = await self.post_repo.get_user_post(user_id=user_id, id=post_id)
         if not post:
-            raise NotFoundException("Пост не найден")
+            raise PostNotFoundException
         return PostReadSchema.model_validate(post)
 
     async def get_posts(
         self, user_id: int, pagination: PaginationSchema
     ) -> list[PostReadSchema]:
         posts = await self.post_repo.get_user_posts(
-            user_id=user_id,
+            user_id,
             limit=pagination.limit,
             offset=(pagination.page - 1) * pagination.limit,
         )
@@ -97,11 +97,22 @@ class PostService:
         post_data: PostUpdateSchema | PostUpdatePartialSchema,
         partial: bool,
     ) -> PostReadSchema:
+
+        post = await self.post_repo.get_user_post(user_id, id=post_id)
+        if not post:
+            raise PostNotFoundException
+
+        if post_data.title:
+            exists_post = await self.post_repo.check_post_exists(
+                user_id, title=post_data.title
+            )
+            if exists_post:
+                logger.warning(PostAlreadyExist.message)
+                raise PostAlreadyExist
+
         updated_post = await self.post_repo.update_post(
-            user_id, post_id, update_data=post_data, partial=partial
+            post, update_data=post_data, partial=partial
         )
-        if not updated_post:
-            raise NotFoundException("Пост не найден")
         return PostReadSchema.model_validate(updated_post)
 
     async def delete_post(self, user_id: int, post_id: int) -> None:

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from .config import settings
-from .exceptions import UnavailibleServiceException
+from .exceptions import UnavailableServiceException
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class Database:
             try:
                 yield session
             except ConnectionDoesNotExistError as e:
-                raise UnavailibleServiceException(str(e))
+                raise UnavailableServiceException(str(e))
 
 
 db_helper = Database(url=str(settings.db.POSTGRES_DSN), echo=bool(settings.db.echo))

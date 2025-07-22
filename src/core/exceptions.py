@@ -37,6 +37,6 @@ class TooEarlyException(AppException):
         super().__init__(message, status_code=status.HTTP_425_TOO_EARLY)
 
 
-class UnavailibleServiceException(AppException):
+class UnavailableServiceException(AppException):
     def __init__(self, message: str):
         super().__init__(message, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)

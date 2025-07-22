@@ -1,14 +1,14 @@
 import logging
-from typing import Protocol, Annotated, Optional, Sequence, Literal
+from typing import Protocol, Annotated, Optional, Sequence
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from core.dependencies import SessionDep
-from core.exceptions import BadRequestException, NotFoundException
+from core.exceptions import NotFoundException, BadValidationException
 from .models import Post
-from .schemas import PostCreateSchema, PostUpdateSchema, PostUpdatePartialSchema
+from .schemas import PostUpdateSchema, PostUpdatePartialSchema
 
 logger = logging.getLogger("post_repo")
 
@@ -36,8 +36,7 @@ class PostRepositoryProtocol(Protocol):
 
     async def update_post(
         self,
-        user_id: int,
-        post_id: int,
+        post: Post,
         update_data: PostUpdateSchema | PostUpdatePartialSchema,
         partial: bool,
     ) -> Optional[Post]:
@@ -45,21 +44,24 @@ class PostRepositoryProtocol(Protocol):
 
 
 class PostRepository:
-    """Репозиторий постов конкретного пользователя"""
+    """
+    Репозиторий для постов авторизованного пользователя
+
+    """
 
     def __init__(self, session: AsyncSession):
         self.session = session
 
     async def create_user_post(self, user_id: int, post_data: dict) -> int:
-        post = Post(user_id=user_id, **post_data)
         logger.debug(f"Пользователь 'user_id: {user_id}' создает пост...")
+        post = Post(user_id=user_id, **post_data)
         self.session.add(post)
         await self.session.commit()
         return post.id
 
     async def get_user_post(self, user_id: int, *args, **kwargs) -> Optional[Post]:
-        query = select(Post).filter_by(user_id=user_id, **kwargs)
         logger.debug(f"Ищем пост пользователя 'user_id: {user_id}' с {kwargs} ...")
+        query = select(Post).filter_by(user_id=user_id, **kwargs)
         res = await self.session.execute(query)
         return res.scalar_one_or_none()
 
@@ -71,38 +73,36 @@ class PostRepository:
         *args,
         **kwargs,
     ) -> Sequence[Post]:
-        query = select(Post).filter_by(user_id=user_id, **kwargs)
-        query = query.limit(limit).offset(offset)
         logger.debug(
             f"Ищем посты пользователя 'user_id: {user_id}', {offset = }, {limit = }"
         )
+        query = select(Post).filter_by(user_id=user_id, **kwargs)
+        query = query.limit(limit).offset(offset)
         res = await self.session.execute(query)
         return res.scalars().all()
 
     async def check_post_exists(self, user_id: int, title: str) -> bool:
-        query = select(Post).filter_by(user_id=user_id, title=title)
         logger.debug(
             f"Проверяем существует ли пост пользователя 'user_id: {user_id}' с 'title: {title}' ..."
         )
+        query = select(Post).filter_by(user_id=user_id, title=title)
         res = await self.session.scalar(query)
         return True if res else False
 
     async def update_post(
         self,
-        user_id: int,
-        post_id: int,
+        post: Post,
         update_data: PostUpdateSchema | PostUpdatePartialSchema,
         partial: bool,
     ) -> Optional[Post]:
-        post = await self.get_user_post(user_id=user_id, id=post_id)
-        if not post:
-            raise NotFoundException("Пост не найден")
 
         for key, value in update_data.model_dump(
-            exclude_none=partial, exclude_unset=partial
+            exclude_none=partial,
+            exclude_unset=partial,
         ).items():
             if not hasattr(post, key):
-                raise
+                logger.error(f"Некорректное поле для обновления: {key}")
+                raise BadValidationException(f"Некорректное поле для обновления: {key}")
             setattr(post, key, value)
 
         await self.session.commit()

@@ -2,7 +2,7 @@ import logging
 from typing import Protocol, Annotated, Optional, Sequence
 
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from core.dependencies import SessionDep
@@ -40,6 +40,9 @@ class PostRepositoryProtocol(Protocol):
         update_data: PostUpdateSchema | PostUpdatePartialSchema,
         partial: bool,
     ) -> Optional[Post]:
+        pass
+
+    async def delete_post(self, post: Post) -> None:
         pass
 
 
@@ -108,6 +111,13 @@ class PostRepository:
         await self.session.commit()
         await self.session.refresh(post)
         return post
+
+    async def delete_post(self, post: Post) -> None:
+        logger.debug(f"Удаляем пост: {post}")
+        stmt = delete(Post).filter_by(id=post.id, user_id=post.user_id)
+        await self.session.execute(stmt)
+        await self.session.commit()
+        return
 
 
 async def get_posts_repository(session: SessionDep) -> PostRepositoryProtocol:

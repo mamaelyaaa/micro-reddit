@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 from api.auth import ActiveUserDep
 from api.auth.views import http_bearer
@@ -14,7 +14,7 @@ from .service import PostServiceDep
 router = APIRouter(prefix="/posts", tags=["Посты"], dependencies=[Depends(http_bearer)])
 
 
-@router.post("")
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def create_post(
     active_user: ActiveUserDep,
     post_service: PostServiceDep,
@@ -78,3 +78,13 @@ async def update_user_post_partially(
         partial=True,
     )
     return post
+
+
+@router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user_post(
+    active_user: ActiveUserDep,
+    post_service: PostServiceDep,
+    post_id: int,
+):
+    await post_service.delete_post(user_id=active_user.id, post_id=post_id)
+    return

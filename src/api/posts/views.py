@@ -11,7 +11,7 @@ from .schemas import (
 )
 from .service import PostServiceDep
 
-router = APIRouter(prefix="/posts", tags=["Посты"], dependencies=[Depends(http_bearer)])
+router = APIRouter(prefix="/posts", tags=["Посты"], dependencies=[Depends(http_bearer)], )
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -20,6 +20,8 @@ async def create_post(
     post_service: PostServiceDep,
     post_data: PostCreateSchema,
 ):
+    """Создание поста авторизованного пользователя"""
+
     post_id = await post_service.create_post(
         user_id=active_user.id, post_data=post_data
     )
@@ -32,6 +34,7 @@ async def get_post_by_post_id(
     post_service: PostServiceDep,
     post_id: int,
 ):
+    """Получение поста авторизованного пользователя по уникальному id"""
     post = await post_service.get_post_by_post_id(
         user_id=active_user.id, post_id=post_id
     )
@@ -44,6 +47,8 @@ async def get_user_posts(
     post_service: PostServiceDep,
     pagination: PaginationDep,
 ):
+    """Получение постов пользователя с пагинацией"""
+
     posts = await post_service.get_posts(user_id=active_user.id, pagination=pagination)
     return posts
 
@@ -55,6 +60,8 @@ async def update_user_post(
     post_data: PostUpdateSchema,
     post_id: int,
 ):
+    """Полное обновление поста авторизованного пользователя"""
+
     post = await post_service.update_post(
         user_id=active_user.id,
         post_id=post_id,
@@ -71,6 +78,8 @@ async def update_user_post_partially(
     post_data: PostUpdatePartialSchema,
     post_id: int,
 ):
+    """Частичное обновление поста авторизованного пользователя"""
+
     post = await post_service.update_post(
         user_id=active_user.id,
         post_id=post_id,
@@ -86,5 +95,7 @@ async def delete_user_post(
     post_service: PostServiceDep,
     post_id: int,
 ):
+    """Удаление поста авторизованного пользователя"""
+
     await post_service.delete_post(user_id=active_user.id, post_id=post_id)
     return

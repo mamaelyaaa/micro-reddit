@@ -6,7 +6,7 @@ from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from core.dependencies import SessionDep
-from core.exceptions import NotFoundException, BadValidationException
+from core.exceptions import BadValidationException
 from .models import Post
 from .schemas import PostUpdateSchema, PostUpdatePartialSchema
 
@@ -56,7 +56,6 @@ class PostRepository:
         self.session = session
 
     async def create_user_post(self, user_id: int, post_data: dict) -> int:
-        logger.debug(f"Пользователь 'user_id: {user_id}' создает пост...")
         post = Post(user_id=user_id, **post_data)
         self.session.add(post)
         await self.session.commit()
@@ -77,7 +76,7 @@ class PostRepository:
         **kwargs,
     ) -> Sequence[Post]:
         logger.debug(
-            f"Ищем посты пользователя 'user_id: {user_id}', {offset = }, {limit = }"
+            f"Ищем посты пользователя {user_id = }, {offset = }, {limit = } ..."
         )
         query = select(Post).filter_by(user_id=user_id, **kwargs)
         query = query.limit(limit).offset(offset)

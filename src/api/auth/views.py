@@ -5,12 +5,8 @@ from fastapi import (
     Response,
     status,
 )
-from fastapi.security import (
-    HTTPBearer,
-    OAuth2PasswordBearer,
-)
+from fastapi.security import HTTPBearer
 
-from core import settings
 from .dependencies import ActiveUserDep, CurrentUserDep
 from .jwt.schemas import BearerResponseSchema
 from .service import AuthServiceDep
@@ -21,7 +17,7 @@ from .users.schemas import (
     UserLoginSchema,
 )
 
-router = APIRouter(prefix="/auth", tags=["Авторизация"])
+router = APIRouter(prefix="/users", tags=["Авторизация"])
 
 http_bearer = HTTPBearer(auto_error=False)
 

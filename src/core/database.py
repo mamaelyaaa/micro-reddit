@@ -30,7 +30,7 @@ class Database:
             try:
                 yield session
             except ConnectionDoesNotExistError as e:
-                raise UnavailibleServiceException(str(e).capitalize())
+                raise UnavailibleServiceException(str(e))
 
 
 db_helper = Database(url=str(settings.db.POSTGRES_DSN), echo=bool(settings.db.echo))

@@ -76,21 +76,12 @@ class AuthService:
         self.jwt_repo = jwt_repo
 
     async def register_user(self, user_data: UserRegisterSchema) -> int:
-        exists_user_by_email = await self.user_repo.check_user_exists(
-            email=user_data.email
+        exists_user = await self.user_repo.check_users_exists(
+            username=user_data.username, email=str(user_data.email)
         )
-        if exists_user_by_email:
-            msg = "Данная почта уже зарегистрирована"
-            logger.warning(msg)
-            raise BadRequestException(msg)
-
-        exists_user_by_username = await self.user_repo.check_user_exists(
-            username=user_data.username
-        )
-        if exists_user_by_username:
-            msg = "Данный юзернейм уже занят"
-            logger.warning(msg)
-            raise BadRequestException(msg)
+        if exists_user:
+            logger.warning(UserAlreadyExists.message)
+            raise UserAlreadyExists
 
         data = UserRegisterSchema(
             username=user_data.username,

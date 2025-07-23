@@ -13,6 +13,8 @@ if TYPE_CHECKING:
 class Post(Base, DateMixin):
     __tablename__ = "posts"
 
+    repr_cols_num = 2
+
     # Колонки
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
     title: Mapped[str] = mapped_column(String(128))

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from .config import settings
-from .exceptions import UnavailibleServiceException
+from .exceptions import UnavailableServiceException
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class Database:
         )
 
     async def dispose(self) -> None:
-        logger.info("Подключение к базе данных разорвано")
+        logger.debug("Подключение к базе данных разорвано")
         await self._engine.dispose()
 
     async def session_getter(self) -> AsyncGenerator[AsyncSession, None]:
@@ -30,7 +30,7 @@ class Database:
             try:
                 yield session
             except ConnectionDoesNotExistError as e:
-                raise UnavailibleServiceException(str(e).capitalize())
+                raise UnavailableServiceException(str(e))
 
 
 db_helper = Database(url=str(settings.db.POSTGRES_DSN), echo=bool(settings.db.echo))

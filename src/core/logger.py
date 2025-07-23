@@ -24,3 +24,5 @@ def setup_logging() -> None:
 
     root_logger.addHandler(stream_handler)
     root_logger.addHandler(file_handler)
+
+    logging.getLogger("asyncio").setLevel(logging.WARNING)

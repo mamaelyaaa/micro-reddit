@@ -37,13 +37,13 @@ class JWTRepository:
 
     @staticmethod
     def create_access_token(uid: str, expiry: timedelta, fresh: bool = False) -> str:
-        logger.info("Создаем токен доступа...")
+        logger.debug("Создаем токен доступа...")
         access_token = security.create_access_token(uid=uid, fresh=fresh, expiry=expiry)
         return access_token
 
     @staticmethod
     def create_refresh_token(uid: str, expiry: timedelta) -> str:
-        logger.info("Создаем токен обновления...")
+        logger.debug("Создаем токен обновления...")
         refresh_token = security.create_refresh_token(uid=uid, expiry=expiry)
         return refresh_token
 
@@ -57,7 +57,6 @@ class JWTRepository:
             )
             if validate:
                 payload = security.verify_token(token)
-                logger.debug("Токен доступа верифицирован и получен")
                 return payload
             return token
 
@@ -81,7 +80,6 @@ class JWTRepository:
             )
             if validate:
                 payload = security.verify_token(token, verify_csrf=False)
-                logger.debug("Токен обновления верифицирован и получен")
                 return payload
             return token
 

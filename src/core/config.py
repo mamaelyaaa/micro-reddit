@@ -14,8 +14,8 @@ class RunConfig(BaseModel):
 
 
 class ApiConfig(BaseModel):
-    title: str = "c-reddit-backend"
-    version: str = "0.2-dev"
+    title: str = "Micro-reddit"
+    version: str = "0.2"
 
 
 class FilesConfig(BaseModel):

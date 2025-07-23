@@ -2,11 +2,11 @@ import logging
 from typing import Protocol, Annotated, Optional
 
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from core.dependencies import SessionDep
-from core.exceptions import BadRequestException
+from core.exceptions import BadValidationException
 from .models import User
 from .schemas import UserRegisterSchema, UserUpdateSchema, UserUpdatePartialSchema
 
@@ -24,13 +24,15 @@ class UserRepositoryProtocol(Protocol):
     async def check_user_exists(self, *args, **kwargs) -> bool:
         pass
 
+    async def check_users_exists(self, username: str, email: str) -> bool:
+        pass
+
     async def update_user(
         self,
+        user: User,
         update_user_data: UserUpdateSchema | UserUpdatePartialSchema,
         partial: bool,
-        *args,
-        **kwargs,
-    ) -> Optional[User]:
+    ) -> User:
         pass
 
 
@@ -47,41 +49,37 @@ class UserRepository:
         return user.id
 
     async def get_user(self, *args, **kwargs) -> Optional[User]:
-        query = select(User).filter_by(**kwargs)
         logger.debug(f"Ищем пользователя {kwargs} ...")
+        query = select(User).filter_by(**kwargs)
         res = await self.session.execute(query)
         return res.scalar_one_or_none()
 
     async def check_user_exists(self, *args, **kwargs) -> bool:
-        query = select(User).filter_by(**kwargs)
         logger.debug(f"Проверяем существует ли пользователь с {kwargs} ...")
+        query = select(User).filter_by(**kwargs)
         user = await self.session.scalar(query)
-        return True if user else False
+        return user is None
+
+    async def check_users_exists(self, username: str, email: str) -> bool:
+        logger.debug(f"Проверяем существует ли пользователи с {username = }, {email = }")
+        query = select(User).where(or_(User.username == username, User.email == email))
+        res = await self.session.scalars(query)
+        return len(res.all()) > 0
 
     async def update_user(
         self,
+        user: User,
         update_user_data: UserUpdateSchema | UserUpdatePartialSchema,
         partial: bool,
-        *args,
-        **kwargs,
-    ) -> Optional[User]:
-        user = await self.get_user(**kwargs)
-
-        exists_email = await self.check_user_exists(email=update_user_data.email)
-        if exists_email:
-            raise BadRequestException("Данная почта уже зарегистрирована")
-
-        exists_username = await self.check_user_exists(
-            username=update_user_data.username
-        )
-        if exists_username:
-            raise BadRequestException("Данный юзернейм уже занят")
-
+    ) -> User:
+        logger.debug("Обновляем пользователя ...")
         for key, value in update_user_data.model_dump(
-            exclude_none=partial, exclude_unset=partial
+            exclude_none=partial,
+            exclude_unset=partial,
         ).items():
             if not hasattr(user, key):
-                raise
+                logger.error(f"Некорректное поле для обновления: {key}")
+                raise BadValidationException(f"Некорректное поле для обновления: {key}")
             setattr(user, key, value)
 
         await self.session.commit()

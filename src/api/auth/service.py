@@ -15,6 +15,7 @@ from utils.security import verify_passwords, hash_password
 from .jwt.repository import JWTRepositoryProtocol, JWTRepositoryDep
 from .jwt.schemas import BearerResponseSchema
 from .jwt.security import security
+from .users.exceptions import UserNotFoundException, UserAlreadyExists
 from .users.repository import UserRepositoryProtocol, UserRepositoryDep
 from .users.schemas import (
     UserReadSchema,
@@ -141,11 +142,25 @@ class AuthService:
         user_id: int,
         partial: bool,
     ) -> UserReadSchema:
-        updated_user = await self.user_repo.update_user(
-            update_user_data=update_user_data, id=user_id, partial=partial
+
+        user = await self.user_repo.get_user(id=user_id)
+        if not user:
+            raise UserNotFoundException
+
+        # Проверяем существование обновляемых полей
+        exists_user = await self.user_repo.check_users_exists(
+            username=update_user_data.username, email=str(update_user_data.email)
         )
-        if not updated_user:
-            raise NotFoundException("Пользователь не найден")
+        if exists_user:
+            logger.warning(UserAlreadyExists.message)
+            raise UserAlreadyExists
+
+        updated_user = await self.user_repo.update_user(
+            user=user,
+            update_user_data=update_user_data,
+            partial=partial,
+        )
+        logger.info(f"Пользователь {user} успешно обновлен!")
 
         return UserReadSchema.model_validate(updated_user)
 

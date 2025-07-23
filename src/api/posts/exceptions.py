@@ -15,4 +15,3 @@ class PostAlreadyExist(AppException):
 
     def __init__(self, message: str = message):
         super().__init__(message, status_code=status.HTTP_400_BAD_REQUEST)
-

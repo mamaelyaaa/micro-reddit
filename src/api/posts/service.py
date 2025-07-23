@@ -6,11 +6,6 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from api.auth.users.repository import UserRepositoryProtocol, UserRepositoryDep
 from core.dependencies import SessionDep
-from core.exceptions import (
-    BadRequestException,
-    NotFoundException,
-    BadValidationException,
-)
 from schemas import PaginationSchema
 from .exceptions import PostNotFoundException, PostAlreadyExist
 from .repository import PostRepositoryProtocol, PostRepositoryDep

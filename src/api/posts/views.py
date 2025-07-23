@@ -11,7 +11,11 @@ from .schemas import (
 )
 from .service import PostServiceDep
 
-router = APIRouter(prefix="/posts", tags=["Посты"], dependencies=[Depends(http_bearer)], )
+router = APIRouter(
+    prefix="/posts",
+    tags=["Посты"],
+    dependencies=[Depends(http_bearer)],
+)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)

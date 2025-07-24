@@ -14,6 +14,7 @@ from models import Base
 from api.auth.users.models import User
 from api.posts.models import Post
 from api.follows.models import Follow
+from api.feeds.models import UserFeed, FeedType
 
 
 config = context.config

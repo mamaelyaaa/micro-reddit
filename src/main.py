@@ -12,15 +12,24 @@ from core.dependencies import SessionDep
 from core.exceptions import AppException
 from core.logger import setup_logging
 from schemas import BaseResponseSchema
+from tasks.broker import broker
 
 setup_logging()
 logger = logging.getLogger(__name__)
 
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     # Startup
+    if not broker.is_worker_process:
+        await broker.startup()
+
     yield
     # Shutdown
+
+    if not broker.is_worker_process:
+        await broker.shutdown()
+
     await db_helper.dispose()
 
 

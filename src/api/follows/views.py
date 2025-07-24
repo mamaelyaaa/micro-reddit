@@ -23,9 +23,9 @@ async def subscribe_user(
     follow_id = await follows_service.subscribe_user(
         cur_user_id=active_user.id, target_id=target_id
     )
-    await feed_service.create_event_for_users(
-        author_id=active_user.id, event_id=follow_id, event_type="follow"
-    )
+    # await feed_service.create_event_for_users(
+    #     author_id=active_user.id, event_id=follow_id, event_type="follow"
+    # )
     return BaseResponseSchema(
         detail=f"Пользователь успешно подписался на {target_id = }"
     )

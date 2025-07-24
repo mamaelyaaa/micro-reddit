@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, status
+from taskiq import AsyncTaskiqTask
 
 from api.auth import ActiveUserDep
 from api.auth.views import http_bearer
+from api.tasks.feed_tasks import create_event_for_users
 from core.dependencies import PaginationDep
 from .schemas import (
     PostCreateSchema,
@@ -31,8 +33,12 @@ async def create_post(
     post_id = await post_service.create_post(
         user_id=active_user.id, post_data=post_data
     )
-    await feed_service.create_event_for_users(
-        author_id=active_user.id, event_id=post_id, event_type="post"
+
+    # Отправляем задачу на создание события в брокер
+    await create_event_for_users.kiq(
+        author_id=active_user.id,
+        event_id=post_id,
+        event_type="POST",
     )
     return {"post_id": post_id}
 

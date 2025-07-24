@@ -8,11 +8,11 @@ from sqlalchemy import text
 
 from api import router as main_router
 from core import settings, db_helper
+from core.broker import broker
 from core.dependencies import SessionDep
 from core.exceptions import AppException
 from core.logger import setup_logging
 from schemas import BaseResponseSchema
-from tasks.broker import broker
 
 setup_logging()
 logger = logging.getLogger(__name__)

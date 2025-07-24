@@ -13,7 +13,7 @@ logger = logging.getLogger("follows_service")
 
 class FollowsServiceProtocol(Protocol):
 
-    async def subscribe_user(self, cur_user_id: int, target_id: int) -> None:
+    async def subscribe_user(self, cur_user_id: int, target_id: int) -> int:
         pass
 
     async def unsubscribe_user(self, cur_user_id: int, target_id: int) -> None:
@@ -26,7 +26,7 @@ class FollowsService:
         self.session = session
         self.follows_repo = follows_repo
 
-    async def subscribe_user(self, cur_user_id: int, target_id: int) -> None:
+    async def subscribe_user(self, cur_user_id: int, target_id: int) -> int:
         if cur_user_id == target_id:
             logger.warning(SelfFollowError.message)
             raise SelfFollowError
@@ -38,13 +38,13 @@ class FollowsService:
             logger.error(FollowAlreadyExists.message)
             raise FollowAlreadyExists
 
-        await self.follows_repo.create_subscription(
+        follow_id = await self.follows_repo.create_subscription(
             follower_id=cur_user_id, followee_id=target_id
         )
         logger.info(
             f"Пользователь {cur_user_id = } успешно подписался на {target_id = }!"
         )
-        return
+        return follow_id
 
     async def unsubscribe_user(self, cur_user_id: int, target_id: int) -> None:
         follow = await self.follows_repo.get_subscription(

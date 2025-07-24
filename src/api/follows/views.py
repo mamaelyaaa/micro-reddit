@@ -2,6 +2,7 @@ from fastapi import APIRouter, status, Depends
 
 from api.auth import ActiveUserDep
 from api.auth.views import http_bearer
+from api.feeds.service import FeedServiceDep
 from api.follows.service import FollowsServiceDep
 from schemas import BaseResponseSchema
 
@@ -14,10 +15,16 @@ router = APIRouter(
     "/subscribe", status_code=status.HTTP_201_CREATED, response_model=BaseResponseSchema
 )
 async def subscribe_user(
-    active_user: ActiveUserDep, follows_service: FollowsServiceDep, target_id: int
+    active_user: ActiveUserDep,
+    follows_service: FollowsServiceDep,
+    feed_service: FeedServiceDep,
+    target_id: int,
 ):
-    await follows_service.subscribe_user(
+    follow_id = await follows_service.subscribe_user(
         cur_user_id=active_user.id, target_id=target_id
+    )
+    await feed_service.create_event_for_users(
+        author_id=active_user.id, event_id=follow_id, event_type="follow"
     )
     return BaseResponseSchema(
         detail=f"Пользователь успешно подписался на {target_id = }"
@@ -34,4 +41,5 @@ async def unsubscribe_user(
     await follows_service.unsubscribe_user(
         cur_user_id=active_user.id, target_id=target_id
     )
+
     return

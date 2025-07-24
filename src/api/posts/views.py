@@ -10,6 +10,7 @@ from .schemas import (
     PostUpdatePartialSchema,
 )
 from .service import PostServiceDep
+from ..feeds.service import FeedServiceDep
 
 router = APIRouter(
     prefix="/posts",
@@ -22,12 +23,16 @@ router = APIRouter(
 async def create_post(
     active_user: ActiveUserDep,
     post_service: PostServiceDep,
+    feed_service: FeedServiceDep,
     post_data: PostCreateSchema,
 ):
     """Создание поста авторизованного пользователя"""
 
     post_id = await post_service.create_post(
         user_id=active_user.id, post_data=post_data
+    )
+    await feed_service.create_event_for_users(
+        author_id=active_user.id, event_id=post_id, event_type="post"
     )
     return {"post_id": post_id}
 

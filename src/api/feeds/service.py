@@ -1,3 +1,4 @@
+import logging
 from typing import Protocol, Annotated
 
 from fastapi import Depends
@@ -8,6 +9,9 @@ from core.dependencies import SessionDep
 from .models import FeedType
 from .repository import FeedRepositoryProtocol, FeedRepositoryDep
 from .schemas import FeedReadSchema
+
+
+logger = logging.getLogger("feeds_service")
 
 
 class FeedServiceProtocol(Protocol):
@@ -44,6 +48,10 @@ class FeedService:
     ) -> None:
         # Получаем всех подписчиков текущего пользователя
         followers_ids = await self.follows_repo.get_subs_ids(user_id=author_id)
+
+        if not followers_ids:
+            logger.warning("События рассылать некому")
+            return
 
         # Добавляем пачку событий в базу данных
         await self.feed_repo.create_event_for_users(

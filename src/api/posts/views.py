@@ -32,11 +32,6 @@ async def create_post(
     post_id = await post_service.create_post(
         user_id=active_user.id, post_data=post_data
     )
-    # await feed_service.create_event_for_users(
-    #     author_id=active_user.id,
-    #     event_id=post_id,
-    #     event_type="POST",
-    # )
 
     # Отправляем задачу на создание события в брокер
     await create_event_for_users.kiq(

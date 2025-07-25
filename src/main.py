@@ -72,6 +72,7 @@ async def http_middleware(request: Request, call_next):
 
 
 if __name__ == "__main__":
+    logger.info(f"----" * 14)
     logger.info(f"Приложение {settings.api.title} v{settings.api.version} стартовало")
     logger.info(f"Запущено на {settings.run.url}")
 

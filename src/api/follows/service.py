@@ -4,9 +4,11 @@ from typing import Protocol, Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.follows.exceptions import FollowAlreadyExists, SelfFollowError, FollowNotFound
-from api.follows.repository import FollowsRepositoryProtocol, FollowsRepositoryDep
 from core.dependencies import SessionDep
+from .exceptions import FollowAlreadyExists, SelfFollowError, FollowNotFound
+from .repository import FollowsRepositoryProtocol, FollowsRepositoryDep
+from api.auth.users.exceptions import UserNotFoundException
+from api.auth.users.repository import UserRepositoryProtocol, UserRepositoryDep
 
 logger = logging.getLogger("follows_service")
 
@@ -22,14 +24,25 @@ class FollowsServiceProtocol(Protocol):
 
 class FollowsService:
 
-    def __init__(self, session: AsyncSession, follows_repo: FollowsRepositoryProtocol):
+    def __init__(
+        self,
+        session: AsyncSession,
+        follows_repo: FollowsRepositoryProtocol,
+        user_repo: UserRepositoryProtocol,
+    ):
         self.session = session
         self.follows_repo = follows_repo
+        self.user_repo = user_repo
 
     async def subscribe_user(self, cur_user_id: int, target_id: int) -> int:
         if cur_user_id == target_id:
             logger.warning(SelfFollowError.message)
             raise SelfFollowError
+
+        target_user = await self.user_repo.get_user(id=target_id)
+        if not target_user:
+            logger.warning(UserNotFoundException.message)
+            raise UserNotFoundException
 
         exists_follow = await self.follows_repo.get_subscription(
             follower_id=cur_user_id, followee_id=target_id
@@ -64,8 +77,9 @@ class FollowsService:
 async def get_follows_service(
     session: SessionDep,
     follows_repo: FollowsRepositoryDep,
+    user_repo: UserRepositoryDep,
 ) -> FollowsServiceProtocol:
-    return FollowsService(session, follows_repo)
+    return FollowsService(session, follows_repo, user_repo)
 
 
 FollowsServiceDep = Annotated[FollowsServiceProtocol, Depends(get_follows_service)]

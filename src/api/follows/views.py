@@ -1,10 +1,9 @@
 from fastapi import APIRouter, status, Depends
 
-from api.auth import ActiveUserDep
-from api.auth.views import http_bearer
-from api.feeds.service import FeedServiceDep
-from api.follows.service import FollowsServiceDep
+from api.auth import ActiveUserDep, http_bearer
+from api.tasks.feed_tasks import create_event_for_users
 from schemas import BaseResponseSchema
+from .service import FollowsServiceDep
 
 router = APIRouter(
     prefix="/follows", tags=["Подписки"], dependencies=[Depends(http_bearer)]
@@ -12,27 +11,31 @@ router = APIRouter(
 
 
 @router.post(
-    "/subscribe", status_code=status.HTTP_201_CREATED, response_model=BaseResponseSchema
+    "/{target_id}",
+    status_code=status.HTTP_201_CREATED,
+    response_model=BaseResponseSchema,
 )
 async def subscribe_user(
     active_user: ActiveUserDep,
     follows_service: FollowsServiceDep,
-    feed_service: FeedServiceDep,
     target_id: int,
 ):
+    # Подписываемся на пользователя
     follow_id = await follows_service.subscribe_user(
         cur_user_id=active_user.id, target_id=target_id
     )
-    # await feed_service.create_event_for_users(
-    #     author_id=active_user.id, event_id=follow_id, event_type="follow"
-    # )
+
+    # Отправляем задачу в брокер
+    await create_event_for_users.kiq(
+        author_id=active_user.id, event_id=follow_id, event_type="FOLLOW"
+    )
     return BaseResponseSchema(
         detail=f"Пользователь успешно подписался на {target_id = }"
     )
 
 
 @router.delete(
-    "/unsubscribe",
+    "/{target_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def unsubscribe_user(

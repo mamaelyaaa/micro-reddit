@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Depends, status
-from taskiq import AsyncTaskiqTask
 
-from api.auth import ActiveUserDep
-from api.auth.views import http_bearer
+from api.auth import ActiveUserDep, http_bearer
 from api.tasks.feed_tasks import create_event_for_users
 from core.dependencies import PaginationDep
 from .schemas import (
@@ -12,7 +10,6 @@ from .schemas import (
     PostUpdatePartialSchema,
 )
 from .service import PostServiceDep
-from ..feeds.service import FeedServiceDep
 
 router = APIRouter(
     prefix="/posts",

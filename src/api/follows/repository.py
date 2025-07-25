@@ -5,8 +5,8 @@ from fastapi import Depends
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.follows.models import Follow
 from core.dependencies import SessionDep
+from .models import Follow
 
 logger = logging.getLogger("follows_repo")
 

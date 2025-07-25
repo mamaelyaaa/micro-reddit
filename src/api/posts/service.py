@@ -4,7 +4,6 @@ from typing import Protocol, Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from api.auth.users.repository import UserRepositoryProtocol, UserRepositoryDep
 from core.dependencies import SessionDep
 from schemas import PaginationSchema
 from .exceptions import PostNotFoundException, PostAlreadyExist
@@ -52,11 +51,9 @@ class PostService:
         self,
         session: AsyncSession,
         post_repo: PostRepositoryProtocol,
-        user_repo: UserRepositoryProtocol,
     ):
         self.session = session
         self.post_repo = post_repo
-        self.user_repo = user_repo
 
     async def create_post(self, user_id: int, post_data: PostCreateSchema) -> int:
         exists_post = await self.post_repo.check_post_exists(
@@ -134,9 +131,8 @@ class PostService:
 async def get_posts_service(
     session: SessionDep,
     post_repo: PostRepositoryDep,
-    user_repo: UserRepositoryDep,
 ) -> PostServiceProtocol:
-    return PostService(session, post_repo, user_repo)
+    return PostService(session, post_repo)
 
 
 PostServiceDep = Annotated[PostServiceProtocol, Depends(get_posts_service)]

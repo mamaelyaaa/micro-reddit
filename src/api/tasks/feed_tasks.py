@@ -1,7 +1,7 @@
 import logging
 
 from api.feeds.models import FeedType
-from api.feeds.service import FeedServiceDep
+from api.feeds.service import FeedServiceDep, FeedServiceProtocol
 from core.broker import broker
 
 logger = logging.getLogger("tasks")
@@ -9,7 +9,7 @@ logger = logging.getLogger("tasks")
 
 @broker.task(task_name="create_event_for_users")
 async def create_event_for_users(
-    feed_service: FeedServiceDep,
+    feed_service: FeedServiceProtocol,
     author_id: int,
     event_id: int,
     event_type: FeedType,

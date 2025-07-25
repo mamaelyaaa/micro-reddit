@@ -18,7 +18,7 @@ class Database:
     def __init__(self, url: str, echo: bool):
         self._engine = create_async_engine(url=url, echo=echo)
         self._session_factory = async_sessionmaker(
-            bind=self._engine, expire_on_commit=False
+            bind=self._engine, expire_on_commit=False, autoflush=False
         )
 
     async def dispose(self) -> None:

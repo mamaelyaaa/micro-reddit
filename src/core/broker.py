@@ -1,8 +1,9 @@
 import taskiq_fastapi
 from taskiq_aio_pika import AioPikaBroker
 
-broker = AioPikaBroker(
-    url="amqp://guest:guest@localhost:5672/",
-)
+from core import settings
+
+broker = AioPikaBroker(url=settings.broker.AMQP_DSN)
 
 taskiq_fastapi.init(broker, app_or_path="main:app")
+

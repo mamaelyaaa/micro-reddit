@@ -15,7 +15,7 @@ async def create_event_for_users(
     event_type: FeedType,
 ) -> None:
     logger.info(
-        f"Отправляем задачу на обновление событий {author_id = }, {event_id = }, {event_type.upper()}"
+        f"Отправляем задачу на обновление событий {author_id = }, {event_id = }, event_type = {event_type.upper()}"
     )
     await feed_service.create_event_for_users(author_id, event_id, event_type)
     return

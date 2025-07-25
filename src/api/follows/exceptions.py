@@ -1,6 +1,6 @@
 from fastapi import status
 
-from core.exceptions import AppException
+from core import AppException
 
 
 class FollowNotFound(AppException):

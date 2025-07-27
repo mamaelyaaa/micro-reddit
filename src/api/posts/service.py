@@ -44,6 +44,7 @@ class PostServiceProtocol(Protocol):
         pass
 
 
+
 class PostService:
     """Сервис постов авторизованного пользователя"""
 

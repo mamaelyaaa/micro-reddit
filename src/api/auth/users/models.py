@@ -3,6 +3,7 @@ from typing import Optional, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import String
 
+from api.feeds.models import UserFeed
 from models import Base, DateMixin
 
 if TYPE_CHECKING:
@@ -14,6 +15,7 @@ class User(Base, DateMixin):
 
     repr_cols_num = 2
 
+    # Колонки
     username: Mapped[str] = mapped_column(String(128), unique=True)
     email: Mapped[str] = mapped_column(String(128), unique=True)
     password: Mapped[Optional[str]]
@@ -21,4 +23,6 @@ class User(Base, DateMixin):
     is_active: Mapped[bool] = mapped_column(default=True)
     is_superuser: Mapped[bool] = mapped_column(default=False)
 
-    user_posts: Mapped[list["Post"]] = relationship(back_populates="post_user")
+    # Отношения
+    posts: Mapped[list["Post"]] = relationship(back_populates="user")
+    feeds: Mapped[list["UserFeed"]] = relationship(back_populates="author", foreign_keys="UserFeed.author_id")

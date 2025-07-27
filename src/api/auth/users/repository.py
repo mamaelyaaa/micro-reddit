@@ -4,13 +4,14 @@ from typing import Protocol, Annotated, Optional
 from fastapi import Depends
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio.session import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from core.dependencies import SessionDep
 from core.exceptions import BadValidationException
 from .models import User
 from .schemas import UserRegisterSchema, UserUpdateSchema, UserUpdatePartialSchema
 
-logger = logging.getLogger("user_repo")
+logger = logging.getLogger(__name__)
 
 
 class UserRepositoryProtocol(Protocol):
@@ -19,6 +20,9 @@ class UserRepositoryProtocol(Protocol):
         pass
 
     async def get_user(self, *args, **kwargs) -> Optional[User]:
+        pass
+
+    async def get_user_with_posts(self, *args, **kwargs) -> Optional[User]:
         pass
 
     async def check_user_exists(self, *args, **kwargs) -> bool:
@@ -54,6 +58,12 @@ class UserRepository:
         res = await self.session.execute(query)
         return res.scalar_one_or_none()
 
+    async def get_user_with_posts(self, *args, **kwargs) -> Optional[User]:
+        logger.debug(f"Ищем пользователя {kwargs} с постами ...")
+        query = select(User).options(selectinload(User.posts)).filter_by(**kwargs)
+        res = await self.session.execute(query)
+        return res.scalar_one_or_none()
+
     async def check_user_exists(self, *args, **kwargs) -> bool:
         logger.debug(f"Проверяем существует ли пользователь с {kwargs} ...")
         query = select(User).filter_by(**kwargs)
@@ -61,7 +71,9 @@ class UserRepository:
         return user is None
 
     async def check_users_exists(self, username: str, email: str) -> bool:
-        logger.debug(f"Проверяем существует ли пользователи с {username = }, {email = }")
+        logger.debug(
+            f"Проверяем существует ли пользователи с {username = }, {email = }"
+        )
         query = select(User).where(or_(User.username == username, User.email == email))
         res = await self.session.scalars(query)
         return len(res.all()) > 0

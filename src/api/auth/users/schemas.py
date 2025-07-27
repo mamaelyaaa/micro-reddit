@@ -18,6 +18,8 @@ class UserLoginSchema(BaseModel):
 
 
 class UserReadSchema(BaseModel):
+    """Схема пользователя со всеми полями"""
+
     id: int
     username: str
     email: EmailStr
@@ -25,6 +27,15 @@ class UserReadSchema(BaseModel):
     updated_at: datetime
     is_active: bool
     is_superuser: bool = False
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserSummaryReadSchema(BaseModel):
+    """Краткая схема пользователя"""
+
+    username: str
+    email: EmailStr
+
     model_config = ConfigDict(from_attributes=True)
 
 

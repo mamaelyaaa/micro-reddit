@@ -58,31 +58,28 @@ async def handle_app_exception(request: Request, exc: AppException):
     return ORJSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
 
-@app.middleware("http")
-async def http_middleware(request: Request, call_next):
-    request_msg = f"{request.method} {request.url.path}"
-
-    start_time = time.perf_counter()
-    response = await call_next(request)
-    process_time = time.perf_counter() - start_time
-    response.headers["X-Process-Time"] = f"{process_time * 1000:.4f}ms"
-
-    logger.info(f"{request_msg} {response.status_code}")
-    return response
+# @app.middleware("http")
+# async def http_middleware(request: Request, call_next):
+#     request_msg = f"{request.method} {request.url.path}"
+#
+#     start_time = time.perf_counter()
+#     response = await call_next(request)
+#     process_time = time.perf_counter() - start_time
+#     response.headers["X-Process-Time"] = f"{process_time * 1000:.4f}ms"
+#
+#     logger.info(f"{request_msg} {response.status_code}")
+#     return response
 
 
 if __name__ == "__main__":
-    logger.info(f"----" * 14)
-    logger.info(f"Приложение {settings.api.title} v{settings.api.version} стартовало")
-    logger.info(f"Запущено на {settings.run.url}")
+    # logger.info(f"Приложение {settings.api.title} v{settings.api.version} стартовало")
+    # logger.info(f"Запущено на {settings.run.url}")
 
     uvicorn.run(
         app="src.main:app",
         reload=True,
         host=settings.run.host,
         port=settings.run.port,
-        log_config=None,
-        log_level=logging.WARNING,
     )
 
-    logger.warning(f"Приложение {settings.api.title} остановлено")
+    # logger.warning(f"Приложение {settings.api.title} остановлено")

@@ -6,12 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.follows.repository import FollowsRepositoryProtocol, FollowsRepositoryDep
 from core.dependencies import SessionDep
+from schemas import SearchResponseSchema, PaginationSchema
 from .models import FeedType
 from .repository import FeedRepositoryProtocol, FeedRepositoryDep
-from .schemas import FeedReadSchema
+from .schemas import FeedReadSchema, FeedDetailSchema
 
-
-logger = logging.getLogger("feeds_service")
+logger = logging.getLogger(__name__)
 
 
 class FeedServiceProtocol(Protocol):
@@ -24,7 +24,12 @@ class FeedServiceProtocol(Protocol):
     ) -> None:
         pass
 
-    async def get_user_events(self, user_id: int) -> list[FeedReadSchema]:
+    async def get_user_events(
+        self,
+        user_id: int,
+        pagination: PaginationSchema,
+    ) -> SearchResponseSchema[FeedDetailSchema]:
+        """Получаем автора поста, сам пост, тип поста, пагинацию и общее количество"""
         pass
 
 
@@ -62,9 +67,28 @@ class FeedService:
         )
         return
 
-    async def get_user_events(self, user_id: int) -> list[FeedReadSchema]:
-        events = await self.feed_repo.get_events(user_id=user_id)
-        return [FeedReadSchema.model_validate(event) for event in events]
+    async def get_user_events(
+        self,
+        user_id: int,
+        pagination: PaginationSchema,
+    ) -> SearchResponseSchema[FeedDetailSchema]:
+        # Собираем количество всех новостей
+        total_events = await self.feed_repo.get_count_events(user_id)
+
+        # Подтягиваем автора новости и саму новость
+        events_with_authors = await self.feed_repo.get_events_with_authors(
+            user_id=user_id,
+            limit=pagination.limit,
+            offset=(pagination.page - 1) * pagination.limit,
+        )
+
+        return SearchResponseSchema(
+            detail=[
+                FeedDetailSchema.model_validate(event) for event in events_with_authors
+            ],
+            total_found=total_events,
+            pagination=pagination,
+        )
 
 
 async def get_feed_service(

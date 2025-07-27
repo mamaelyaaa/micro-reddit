@@ -12,14 +12,6 @@ if TYPE_CHECKING:
 
 class Post(Base, DateMixin):
     __tablename__ = "posts"
-
-    repr_cols_num = 2
-
-    # Колонки
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
-    title: Mapped[str] = mapped_column(String(128))
-    description: Mapped[Optional[str]] = mapped_column(String(2048))
-
     __table_args__ = (
         UniqueConstraint(
             "title",
@@ -28,5 +20,13 @@ class Post(Base, DateMixin):
         ),
     )
 
+    # Колонки
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    title: Mapped[str] = mapped_column(String(128))
+    description: Mapped[Optional[str]] = mapped_column(String(2048))
+
     # Отношения
-    post_user: Mapped["User"] = relationship(back_populates="user_posts")
+    user: Mapped["User"] = relationship(back_populates="posts")
+
+    # Дополнительно
+    repr_cols_num = 2

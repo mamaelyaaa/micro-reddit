@@ -2,13 +2,14 @@ import logging
 from typing import Protocol, Annotated, Sequence
 
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from core.dependencies import SessionDep
 from .models import FeedType, UserFeed
 
-logger = logging.getLogger("feeds_repo")
+logger = logging.getLogger(__name__)
 
 
 class FeedRepositoryProtocol(Protocol):
@@ -20,9 +21,18 @@ class FeedRepositoryProtocol(Protocol):
         event_id: int,
         event_type: FeedType,
     ) -> None:
+        """Создает новость для пользователей (подписчиков)"""
         pass
 
-    async def get_events(self, user_id: int) -> Sequence[UserFeed]:
+    async def get_count_events(self, user_id: int) -> int:
+        """
+        Получает количество всех новостей для пользователя
+        Для полноценного вывода с пагинацией
+        """
+        pass
+
+    async def get_events_with_authors(self, user_id: int, offset: int, limit: int) -> Sequence[UserFeed]:
+        """Получаем новость для пользователя с его автором"""
         pass
 
 
@@ -52,9 +62,23 @@ class FeedRepository:
         await self.session.commit()
         return
 
-    async def get_events(self, user_id: int) -> Sequence[UserFeed]:
-        logger.debug(f"Пользователь {user_id = } получает новости...")
-        query = select(UserFeed).filter_by(recipient_id=user_id)
+    async def get_count_events(self, user_id: int) -> int:
+        logger.debug(
+            f"Получаем общее количество новостей для пользователя {user_id = } ..."
+        )
+        query = select(func.count(UserFeed.id).filter(UserFeed.recipient_id == user_id))
+        res = await self.session.execute(query)
+        return res.scalar_one()
+
+    async def get_events_with_authors(self, user_id: int, offset: int, limit: int) -> Sequence[UserFeed]:
+        logger.debug(f"Получаем новости пользователя {user_id = } с их авторами  ...")
+        query = (
+            select(UserFeed)
+            .options(joinedload(UserFeed.author))
+            .filter_by(recipient_id=user_id)
+            .offset(offset)
+            .limit(limit)
+        )
         res = await self.session.execute(query)
         return res.scalars().all()
 

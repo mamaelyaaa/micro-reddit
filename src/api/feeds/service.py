@@ -9,7 +9,7 @@ from core.dependencies import SessionDep
 from schemas import SearchResponseSchema, PaginationSchema
 from .models import FeedType
 from .repository import FeedRepositoryProtocol, FeedRepositoryDep
-from .schemas import FeedReadSchema, FeedDetailSchema
+from .schemas import FeedDetailSchema
 
 logger = logging.getLogger(__name__)
 

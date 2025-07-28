@@ -31,7 +31,9 @@ class FeedRepositoryProtocol(Protocol):
         """
         pass
 
-    async def get_events_with_authors(self, user_id: int, offset: int, limit: int) -> Sequence[UserFeed]:
+    async def get_events_with_authors(
+        self, user_id: int, offset: int, limit: int
+    ) -> Sequence[UserFeed]:
         """Получаем новость для пользователя с его автором"""
         pass
 
@@ -70,8 +72,13 @@ class FeedRepository:
         res = await self.session.execute(query)
         return res.scalar_one()
 
-    async def get_events_with_authors(self, user_id: int, offset: int, limit: int) -> Sequence[UserFeed]:
-        logger.debug(f"Получаем новости пользователя {user_id = } с их авторами  ...")
+    async def get_events_with_authors(
+        self, user_id: int, offset: int, limit: int
+    ) -> Sequence[UserFeed]:
+        logger.debug(f"Получаем новости пользователя #%s с их авторами  ...", user_id)
+
+        # TODO Доделать join на принятие самого события (пост или подписка)
+
         query = (
             select(UserFeed)
             .options(joinedload(UserFeed.author))

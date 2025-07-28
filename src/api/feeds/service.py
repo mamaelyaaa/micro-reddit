@@ -2,10 +2,8 @@ import logging
 from typing import Protocol, Annotated
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.follows.repository import FollowsRepositoryProtocol, FollowsRepositoryDep
-from core.dependencies import SessionDep
 from schemas import SearchResponseSchema, PaginationSchema
 from .repository import FeedRepositoryProtocol, FeedRepositoryDep
 from .schemas import FeedDetailSchema
@@ -20,6 +18,7 @@ class FeedServiceProtocol(Protocol):
         author_id: int,
         post_id: int,
     ) -> None:
+        """Создаем событие для пользователей (подписчиков)"""
         pass
 
     async def get_user_events(
@@ -35,11 +34,9 @@ class FeedService:
 
     def __init__(
         self,
-        session: AsyncSession,
         feed_repo: FeedRepositoryProtocol,
         follows_repo: FollowsRepositoryProtocol,
     ):
-        self.session = session
         self.feed_repo = feed_repo
         self.follows_repo = follows_repo
 
@@ -48,11 +45,14 @@ class FeedService:
         author_id: int,
         post_id: int,
     ) -> None:
-        # Получаем всех подписчиков текущего пользователя
+        # Получаем всех подписчиков пользователя
         followers_ids = await self.follows_repo.get_subs_ids(user_id=author_id)
 
         if not followers_ids:
-            logger.warning("События рассылать некому")
+            logger.warning(
+                "У пользователя #%d нет подписчиков. Событие не будет рассылаться никому",
+                author_id,
+            )
             return
 
         # Добавляем пачку событий в базу данных
@@ -61,6 +61,7 @@ class FeedService:
             recipients_ids=list(followers_ids),
             post_id=post_id,
         )
+
         return
 
     async def get_user_events(
@@ -88,11 +89,10 @@ class FeedService:
 
 
 async def get_feed_service(
-    session: SessionDep,
     feed_repo: FeedRepositoryDep,
     follows_repo: FollowsRepositoryDep,
 ) -> FeedServiceProtocol:
-    return FeedService(session, feed_repo, follows_repo)
+    return FeedService(feed_repo, follows_repo)
 
 
 FeedServiceDep = Annotated[FeedServiceProtocol, Depends(get_feed_service)]

@@ -25,4 +25,3 @@ class User(Base, DateMixin):
 
     # Отношения
     posts: Mapped[list["Post"]] = relationship(back_populates="user")
-    feeds: Mapped[list["UserFeed"]] = relationship(back_populates="author", foreign_keys="UserFeed.author_id")

@@ -7,12 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from core.dependencies import SessionDep
-from .models import FeedType, UserFeed
+from .models import UserFeed
 
 logger = logging.getLogger(__name__)
 
 
 class FeedRepositoryProtocol(Protocol):
+    """Репозиторий для новостей пользователей"""
 
     async def create_event_for_users(
         self,
@@ -26,7 +27,7 @@ class FeedRepositoryProtocol(Protocol):
     async def get_count_events(self, user_id: int) -> int:
         """
         Получает количество всех новостей для пользователя
-        Для полноценного вывода с пагинацией
+        * Для полноценного вывода с пагинацией
         """
         pass
 
@@ -36,7 +37,10 @@ class FeedRepositoryProtocol(Protocol):
         offset: int,
         limit: int,
     ) -> Sequence[UserFeed]:
-        """Получаем новость для пользователя с его автором"""
+        """
+        Получаем полную информацию о новости для пользователя с автором
+        * с пагинацией
+        """
         pass
 
 
@@ -51,8 +55,7 @@ class FeedRepository:
         recipients_ids: list[int],
         post_id: int,
     ) -> None:
-        logger.debug(f"Создаем события для пользователей {recipients_ids = }...")
-
+        logger.debug(f"Создаем события для пользователей #({recipients_ids}) ...")
         self.session.add_all(
             [
                 UserFeed(
@@ -69,7 +72,8 @@ class FeedRepository:
 
     async def get_count_events(self, user_id: int) -> int:
         logger.debug(
-            f"Получаем общее количество новостей для пользователя {user_id = } ..."
+            f"Получаем общее количество новостей для пользователя #%d ...",
+            user_id,
         )
         query = select(func.count(UserFeed.id).filter(UserFeed.recipient_id == user_id))
         res = await self.session.execute(query)
@@ -82,11 +86,9 @@ class FeedRepository:
         limit: int,
     ) -> Sequence[UserFeed]:
         logger.debug(
-            f"Получаем подробные новости пользователя #%s с их авторами  ...", user_id
+            f"Получаем подробные новости пользователя #%d с их авторами  ...",
+            user_id,
         )
-
-        # TODO Доделать join на принятие самого события (пост или подписка)
-
         query = (
             select(UserFeed)
             .options(

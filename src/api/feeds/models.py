@@ -28,7 +28,7 @@ class UserFeed(Base):
 
     # Отношения
     author: Mapped["User"] = relationship(
-        back_populates="feeds",
+        backref="feeds",
         primaryjoin="UserFeed.author_id == User.id",
     )
     post: Mapped["Post"] = relationship(backref="feed")

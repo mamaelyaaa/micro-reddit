@@ -1,8 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 
 from api.auth.users.schemas import UserSummaryReadSchema
-from .models import FeedType
-from ..posts.schemas import PostReadSchema
+from api.posts.schemas import PostReadSchema
 
 
 class FeedBaseSchema(BaseModel):
@@ -19,8 +18,6 @@ class FeedReadSchema(FeedBaseSchema):
 
 
 class FeedDetailSchema(BaseModel):
-    # author_id: int
-    # post_id: int
     author: UserSummaryReadSchema
     post: PostReadSchema
 

@@ -4,7 +4,6 @@ from typing import Protocol, Annotated, Optional
 from fastapi import Depends
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from core.dependencies import SessionDep
 from core.exceptions import BadValidationException
@@ -20,9 +19,6 @@ class UserRepositoryProtocol(Protocol):
         pass
 
     async def get_user(self, *args, **kwargs) -> Optional[User]:
-        pass
-
-    async def get_user_with_posts(self, *args, **kwargs) -> Optional[User]:
         pass
 
     async def check_user_exists(self, *args, **kwargs) -> bool:
@@ -46,8 +42,8 @@ class UserRepository:
         self.session = session
 
     async def add_user(self, user_data: UserRegisterSchema) -> int:
+        logger.debug(f"Создаем пользователя %s ...", user_data.username)
         user = User(**user_data.model_dump())
-        logger.debug(f"Создаем пользователя: {user}")
         self.session.add(user)
         await self.session.commit()
         return user.id
@@ -55,12 +51,6 @@ class UserRepository:
     async def get_user(self, *args, **kwargs) -> Optional[User]:
         logger.debug(f"Ищем пользователя {kwargs} ...")
         query = select(User).filter_by(**kwargs)
-        res = await self.session.execute(query)
-        return res.scalar_one_or_none()
-
-    async def get_user_with_posts(self, *args, **kwargs) -> Optional[User]:
-        logger.debug(f"Ищем пользователя {kwargs} с постами ...")
-        query = select(User).options(selectinload(User.posts)).filter_by(**kwargs)
         res = await self.session.execute(query)
         return res.scalar_one_or_none()
 

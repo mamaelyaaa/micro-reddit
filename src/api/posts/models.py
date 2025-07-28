@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.schema import UniqueConstraint, ForeignKey
 from sqlalchemy.types import String
 
+from api.feeds.models import UserFeed
 from models import Base, DateMixin
 
 if TYPE_CHECKING:

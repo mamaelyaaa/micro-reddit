@@ -20,5 +20,7 @@ async def create_event_for_users(
 ) -> None:
     logger.info(f"Отправляем задачу на обновление событий {author_id = }, {post_id = }")
     await feed_service.create_event_for_users(author_id, post_id)
-    logger.info(f"Задача create_event_for_users выполнена")
+    logger.info(
+        "Подписчики пользователя #%d увидят его новый пост #%d!", author_id, post_id
+    )
     return

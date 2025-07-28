@@ -4,7 +4,7 @@ from api.auth import ActiveUserDep
 from api.auth.views import http_bearer
 from core.dependencies import PaginationDep
 from schemas import SearchResponseSchema
-from .schemas import FeedReadSchema, FeedDetailSchema
+from .schemas import FeedDetailSchema
 from .service import FeedServiceDep
 
 router = APIRouter(prefix="/feed", tags=["Лента"], dependencies=[Depends(http_bearer)])

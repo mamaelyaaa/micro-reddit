@@ -16,6 +16,7 @@ class RunConfig(BaseModel):
     def url(self):
         return f"http://{self.host}:{self.port}"
 
+
 class ApiConfig(BaseModel):
     title: str = "Micro-reddit"
     version: str = "0.3"
@@ -41,7 +42,10 @@ class FilesConfig(BaseModel):
 
 class LogsConfig(BaseModel):
     level: Literal["DEBUG", "INFO"] = "INFO"
-    format: str = "[%(asctime)s] - %(name)-24s - %(levelname)-7s - %(message)s"
+    format: str = "[%(asctime)s] - %(name)-26s - %(levelname)-7s - %(message)s"
+    worker_format: str = (
+        "[%(asctime)s][%(processName)s] - %(name)-26s - %(levelname)-7s - %(message)s"
+    )
 
 
 class DatabaseConfig(BaseModel):

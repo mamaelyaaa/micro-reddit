@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.dependencies import SessionDep
 from .models import Follow
 
-logger = logging.getLogger("follows_repo")
+logger = logging.getLogger(__name__)
 
 
 class FollowsRepositoryProtocol(Protocol):

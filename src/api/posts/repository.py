@@ -10,7 +10,7 @@ from core.exceptions import BadValidationException
 from .models import Post
 from .schemas import PostUpdateSchema, PostUpdatePartialSchema
 
-logger = logging.getLogger("post_repo")
+logger = logging.getLogger(__name__)
 
 
 class PostRepositoryProtocol(Protocol):

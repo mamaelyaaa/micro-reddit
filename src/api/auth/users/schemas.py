@@ -33,6 +33,7 @@ class UserReadSchema(BaseModel):
 class UserSummaryReadSchema(BaseModel):
     """Краткая схема пользователя"""
 
+    id: int
     username: str
     email: EmailStr
 

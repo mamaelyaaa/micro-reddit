@@ -3,11 +3,10 @@ from typing import Annotated
 
 from taskiq import TaskiqDepends
 
-from api.feeds.models import FeedType
 from api.feeds.service import FeedServiceProtocol, get_feed_service
 from core.broker import broker
 
-logger = logging.getLogger("feed_tasks")
+logger = logging.getLogger(__name__)
 
 
 FeedServiceTaskiqDep = Annotated[FeedServiceProtocol, TaskiqDepends(get_feed_service)]
@@ -17,12 +16,9 @@ FeedServiceTaskiqDep = Annotated[FeedServiceProtocol, TaskiqDepends(get_feed_ser
 async def create_event_for_users(
     feed_service: FeedServiceTaskiqDep,
     author_id: int,
-    event_id: int,
-    event_type: FeedType,
+    post_id: int,
 ) -> None:
-    logger.info(
-        f"Отправляем задачу на обновление событий {author_id = }, {event_id = }, event_type = {event_type.upper()}"
-    )
-    await feed_service.create_event_for_users(author_id, event_id, event_type)
+    logger.info(f"Отправляем задачу на обновление событий {author_id = }, {post_id = }")
+    await feed_service.create_event_for_users(author_id, post_id)
     logger.info(f"Задача create_event_for_users выполнена")
     return

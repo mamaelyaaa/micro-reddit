@@ -1,15 +1,13 @@
-from typing import Any
-
 from pydantic import BaseModel, ConfigDict
 
+from api.auth.users.schemas import UserSummaryReadSchema
 from .models import FeedType
-from ..auth.users.schemas import UserSummaryReadSchema
+from ..posts.schemas import PostReadSchema
 
 
 class FeedBaseSchema(BaseModel):
     author_id: int
-    event_id: int
-    event_type: FeedType
+    post_id: int
 
 
 class FeedCreateSchema(FeedBaseSchema):
@@ -21,9 +19,9 @@ class FeedReadSchema(FeedBaseSchema):
 
 
 class FeedDetailSchema(BaseModel):
-    author_id: int
-    event_id: int
-    event_type: FeedType
+    # author_id: int
+    # post_id: int
     author: UserSummaryReadSchema
+    post: PostReadSchema
 
     model_config = ConfigDict(from_attributes=True)

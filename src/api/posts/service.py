@@ -15,7 +15,7 @@ from .schemas import (
     PostUpdatePartialSchema,
 )
 
-logger = logging.getLogger("post_service")
+logger = logging.getLogger(__name__)
 
 
 class PostServiceProtocol(Protocol):
@@ -42,7 +42,6 @@ class PostServiceProtocol(Protocol):
 
     async def delete_post(self, user_id: int, post_id: int) -> None:
         pass
-
 
 
 class PostService:

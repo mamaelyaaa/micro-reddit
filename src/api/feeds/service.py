@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.follows.repository import FollowsRepositoryProtocol, FollowsRepositoryDep
 from core.dependencies import SessionDep
 from schemas import SearchResponseSchema, PaginationSchema
-from .models import FeedType
 from .repository import FeedRepositoryProtocol, FeedRepositoryDep
 from .schemas import FeedDetailSchema
 
@@ -19,8 +18,7 @@ class FeedServiceProtocol(Protocol):
     async def create_event_for_users(
         self,
         author_id: int,
-        event_id: int,
-        event_type: FeedType,
+        post_id: int,
     ) -> None:
         pass
 
@@ -48,8 +46,7 @@ class FeedService:
     async def create_event_for_users(
         self,
         author_id: int,
-        event_id: int,
-        event_type: FeedType,
+        post_id: int,
     ) -> None:
         # Получаем всех подписчиков текущего пользователя
         followers_ids = await self.follows_repo.get_subs_ids(user_id=author_id)
@@ -62,8 +59,7 @@ class FeedService:
         await self.feed_repo.create_event_for_users(
             author_id=author_id,
             recipients_ids=list(followers_ids),
-            event_id=event_id,
-            event_type=event_type,
+            post_id=post_id,
         )
         return
 
@@ -76,7 +72,7 @@ class FeedService:
         total_events = await self.feed_repo.get_count_events(user_id)
 
         # Подтягиваем автора новости и саму новость
-        events_with_authors = await self.feed_repo.get_events_with_authors(
+        events_with_authors = await self.feed_repo.get_full_events_with_authors(
             user_id=user_id,
             limit=pagination.limit,
             offset=(pagination.page - 1) * pagination.limit,

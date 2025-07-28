@@ -18,8 +18,7 @@ class FeedRepositoryProtocol(Protocol):
         self,
         author_id: int,
         recipients_ids: list[int],
-        event_id: int,
-        event_type: FeedType,
+        post_id: int,
     ) -> None:
         """Создает новость для пользователей (подписчиков)"""
         pass
@@ -31,8 +30,11 @@ class FeedRepositoryProtocol(Protocol):
         """
         pass
 
-    async def get_events_with_authors(
-        self, user_id: int, offset: int, limit: int
+    async def get_full_events_with_authors(
+        self,
+        user_id: int,
+        offset: int,
+        limit: int,
     ) -> Sequence[UserFeed]:
         """Получаем новость для пользователя с его автором"""
         pass
@@ -47,19 +49,20 @@ class FeedRepository:
         self,
         author_id: int,
         recipients_ids: list[int],
-        event_id: int,
-        event_type: FeedType,
+        post_id: int,
     ) -> None:
         logger.debug(f"Создаем события для пользователей {recipients_ids = }...")
 
-        for recipient_id in recipients_ids:
-            event = UserFeed(
-                author_id=author_id,
-                recipient_id=recipient_id,
-                event_id=event_id,
-                event_type=event_type,
-            )
-            self.session.add(event)
+        self.session.add_all(
+            [
+                UserFeed(
+                    author_id=author_id,
+                    recipient_id=recipient_id,
+                    post_id=post_id,
+                )
+                for recipient_id in recipients_ids
+            ]
+        )
 
         await self.session.commit()
         return
@@ -72,16 +75,24 @@ class FeedRepository:
         res = await self.session.execute(query)
         return res.scalar_one()
 
-    async def get_events_with_authors(
-        self, user_id: int, offset: int, limit: int
+    async def get_full_events_with_authors(
+        self,
+        user_id: int,
+        offset: int,
+        limit: int,
     ) -> Sequence[UserFeed]:
-        logger.debug(f"Получаем новости пользователя #%s с их авторами  ...", user_id)
+        logger.debug(
+            f"Получаем подробные новости пользователя #%s с их авторами  ...", user_id
+        )
 
         # TODO Доделать join на принятие самого события (пост или подписка)
 
         query = (
             select(UserFeed)
-            .options(joinedload(UserFeed.author))
+            .options(
+                joinedload(UserFeed.author),
+                joinedload(UserFeed.post),
+            )
             .filter_by(recipient_id=user_id)
             .offset(offset)
             .limit(limit)

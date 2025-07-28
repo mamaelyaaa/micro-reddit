@@ -1,33 +1,34 @@
-from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models import Base
 
 if TYPE_CHECKING:
     from api.auth.users.models import User
-
-
-class FeedType(StrEnum):
-    follow = "FOLLOW"
-    post = "POST"
+    from api.posts.models import Post
 
 
 class UserFeed(Base):
     __tablename__ = "users_feed"
-    repr_cols_num = 10
+    __table_args__ = (
+        UniqueConstraint(
+            "author_id",
+            "recipient_id",
+            "post_id",
+        ),
+    )
+    repr_cols_num = 5
 
     # Колонки
     author_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     recipient_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    event_id: Mapped[int]
-    event_type: Mapped[FeedType]
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
 
     # Отношения
     author: Mapped["User"] = relationship(
-        "User",
         back_populates="feeds",
-        primaryjoin="UserFeed.author_id == User.id"
+        primaryjoin="UserFeed.author_id == User.id",
     )
+    post: Mapped["Post"] = relationship(backref="feed")

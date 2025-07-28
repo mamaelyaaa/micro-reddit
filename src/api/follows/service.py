@@ -10,7 +10,7 @@ from .repository import FollowsRepositoryProtocol, FollowsRepositoryDep
 from api.auth.users.exceptions import UserNotFoundException
 from api.auth.users.repository import UserRepositoryProtocol, UserRepositoryDep
 
-logger = logging.getLogger("follows_service")
+logger = logging.getLogger(__name__)
 
 
 class FollowsServiceProtocol(Protocol):

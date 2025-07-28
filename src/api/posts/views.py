@@ -33,8 +33,7 @@ async def create_post(
     # Отправляем задачу на создание события в брокер
     await create_event_for_users.kiq(
         author_id=active_user.id,
-        event_id=post_id,
-        event_type="POST",
+        post_id=post_id,
     )
     return {"post_id": post_id}
 

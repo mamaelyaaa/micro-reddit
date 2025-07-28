@@ -1,7 +1,6 @@
 from fastapi import APIRouter, status, Depends
 
 from api.auth import ActiveUserDep, http_bearer
-from api.tasks.feed_tasks import create_event_for_users
 from schemas import BaseResponseSchema
 from .service import FollowsServiceDep
 
@@ -25,10 +24,6 @@ async def subscribe_user(
         cur_user_id=active_user.id, target_id=target_id
     )
 
-    # Отправляем задачу в брокер
-    await create_event_for_users.kiq(
-        author_id=active_user.id, event_id=follow_id, event_type="FOLLOW"
-    )
     return BaseResponseSchema(
         detail=f"Пользователь успешно подписался на {target_id = }"
     )

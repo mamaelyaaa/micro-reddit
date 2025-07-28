@@ -19,7 +19,7 @@ class RunConfig(BaseModel):
 
 class ApiConfig(BaseModel):
     title: str = "Micro-reddit"
-    version: str = "0.3"
+    version: str = "0.4-dev"
 
 
 class FilesConfig(BaseModel):
@@ -43,9 +43,6 @@ class FilesConfig(BaseModel):
 class LogsConfig(BaseModel):
     level: Literal["DEBUG", "INFO"] = "INFO"
     format: str = "[%(asctime)s] - %(name)-26s - %(levelname)-7s - %(message)s"
-    worker_format: str = (
-        "[%(asctime)s][%(processName)s] - %(name)-26s - %(levelname)-7s - %(message)s"
-    )
 
 
 class DatabaseConfig(BaseModel):

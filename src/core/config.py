@@ -12,10 +12,14 @@ class RunConfig(BaseModel):
     host: str = "127.0.0.1"
     port: int = 8000
 
+    @property
+    def url(self):
+        return f"http://{self.host}:{self.port}"
+
 
 class ApiConfig(BaseModel):
     title: str = "Micro-reddit"
-    version: str = "0.3"
+    version: str = "0.4"
 
 
 class FilesConfig(BaseModel):
@@ -38,7 +42,7 @@ class FilesConfig(BaseModel):
 
 class LogsConfig(BaseModel):
     level: Literal["DEBUG", "INFO"] = "INFO"
-    format: str = "%(asctime)s - %(name)-16s - %(levelname)-7s - %(message)s"
+    format: str = "[%(asctime)s] - %(name)-26s - %(levelname)-7s - %(message)s"
 
 
 class DatabaseConfig(BaseModel):
@@ -76,11 +80,15 @@ class JWTConfig(BaseModel):
     cookie_session: bool = False
 
 
-# class BrokerConfig(BaseModel):
-#
-#     @property
-#     def AMQP_DSN(self):
-#         return f"amqp://{self.username}:{self.password}@{self.host}:{self.port}//"
+class BrokerConfig(BaseModel):
+    username: str
+    password: str
+    host: str
+    port: str
+
+    @property
+    def AMQP_DSN(self):
+        return f"amqp://{self.username}:{self.password}@{self.host}:{self.port}/"
 
 
 class Settings(BaseSettings):
@@ -90,6 +98,7 @@ class Settings(BaseSettings):
     log: LogsConfig = LogsConfig()
 
     db: DatabaseConfig
+    broker: BrokerConfig
     jwt: JWTConfig
 
     model_config = SettingsConfigDict(

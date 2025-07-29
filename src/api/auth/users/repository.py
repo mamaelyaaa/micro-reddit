@@ -10,7 +10,7 @@ from core.exceptions import BadValidationException
 from .models import User
 from .schemas import UserRegisterSchema, UserUpdateSchema, UserUpdatePartialSchema
 
-logger = logging.getLogger("user_repo")
+logger = logging.getLogger(__name__)
 
 
 class UserRepositoryProtocol(Protocol):
@@ -42,8 +42,8 @@ class UserRepository:
         self.session = session
 
     async def add_user(self, user_data: UserRegisterSchema) -> int:
+        logger.debug(f"Создаем пользователя %s ...", user_data.username)
         user = User(**user_data.model_dump())
-        logger.debug(f"Создаем пользователя: {user}")
         self.session.add(user)
         await self.session.commit()
         return user.id
@@ -61,7 +61,9 @@ class UserRepository:
         return user is None
 
     async def check_users_exists(self, username: str, email: str) -> bool:
-        logger.debug(f"Проверяем существует ли пользователи с {username = }, {email = }")
+        logger.debug(
+            f"Проверяем существует ли пользователи с {username = }, {email = }"
+        )
         query = select(User).where(or_(User.username == username, User.email == email))
         res = await self.session.scalars(query)
         return len(res.all()) > 0

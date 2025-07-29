@@ -25,8 +25,7 @@ from .users.schemas import (
     UserUpdatePartialSchema,
 )
 
-
-logger = logging.getLogger("auth_service")
+logger = logging.getLogger(__name__)
 
 
 class AuthServiceProtocol(Protocol):

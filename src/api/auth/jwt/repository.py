@@ -9,7 +9,7 @@ from fastapi import Request, Depends
 from core.exceptions import ForbiddenException, NotAuthorizedException
 from .security import security
 
-logger = logging.getLogger("jwt_repo")
+logger = logging.getLogger(__name__)
 
 
 class JWTRepositoryProtocol(Protocol):

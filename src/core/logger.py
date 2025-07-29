@@ -1,6 +1,7 @@
 import logging
 import logging.handlers
 import sys
+from typing import Literal
 
 from .config import settings
 
@@ -26,3 +27,6 @@ def setup_logging() -> None:
     root_logger.addHandler(file_handler)
 
     logging.getLogger("asyncio").setLevel(logging.WARNING)
+    logging.getLogger("aio_pika").setLevel(logging.INFO)
+    logging.getLogger("aiormq").setLevel(logging.INFO)
+    logging.getLogger("taskiq.receiver").setLevel(logging.INFO)

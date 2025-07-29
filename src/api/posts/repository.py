@@ -1,5 +1,5 @@
 import logging
-from typing import Protocol, Annotated, Optional, Sequence
+from typing import Protocol, Annotated, Optional, Sequence, Any
 
 from fastapi import Depends
 from sqlalchemy import select, delete
@@ -8,14 +8,18 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from core.dependencies import SessionDep
 from core.exceptions import BadValidationException
 from .models import Post
-from .schemas import PostUpdateSchema, PostUpdatePartialSchema
+from .schemas import PostUpdateSchema, PostUpdatePartialSchema, PostCreateSchema
 
-logger = logging.getLogger("post_repo")
+logger = logging.getLogger(__name__)
 
 
 class PostRepositoryProtocol(Protocol):
 
-    async def create_user_post(self, user_id: int, post_data: dict) -> int:
+    async def create_user_post(
+        self,
+        user_id: int,
+        post_data: PostCreateSchema,
+    ) -> int:
         pass
 
     async def get_user_post(self, user_id: int, *args, **kwargs) -> Optional[Post]:
@@ -49,20 +53,24 @@ class PostRepositoryProtocol(Protocol):
 class PostRepository:
     """
     Репозиторий для постов авторизованного пользователя
-
     """
 
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create_user_post(self, user_id: int, post_data: dict) -> int:
-        post = Post(user_id=user_id, **post_data)
+    async def create_user_post(
+        self,
+        user_id: int,
+        post_data: PostCreateSchema,
+    ) -> int:
+        logger.debug('Создаем пост "%s" ...', post_data.title)
+        post = Post(user_id=user_id, **post_data.model_dump())
         self.session.add(post)
         await self.session.commit()
         return post.id
 
     async def get_user_post(self, user_id: int, *args, **kwargs) -> Optional[Post]:
-        logger.debug(f"Ищем пост пользователя 'user_id: {user_id}' с {kwargs} ...")
+        logger.debug(f"Ищем пост пользователя #{user_id} с {kwargs} ...")
         query = select(Post).filter_by(user_id=user_id, **kwargs)
         res = await self.session.execute(query)
         return res.scalar_one_or_none()
@@ -76,7 +84,10 @@ class PostRepository:
         **kwargs,
     ) -> Sequence[Post]:
         logger.debug(
-            f"Ищем посты пользователя {user_id = }, {offset = }, {limit = } ..."
+            f"Ищем %d постов пользователя #%d, начиная с %d ...",
+            limit,
+            user_id,
+            offset,
         )
         query = select(Post).filter_by(user_id=user_id, **kwargs)
         query = query.limit(limit).offset(offset)
@@ -85,7 +96,9 @@ class PostRepository:
 
     async def check_post_exists(self, user_id: int, title: str) -> bool:
         logger.debug(
-            f"Проверяем существует ли пост пользователя 'user_id: {user_id}' с 'title: {title}' ..."
+            f"Проверяем существует ли пост пользователя #%d с названием %s ...",
+            user_id,
+            title,
         )
         query = select(Post).filter_by(user_id=user_id, title=title)
         res = await self.session.scalar(query)
@@ -97,14 +110,17 @@ class PostRepository:
         update_data: PostUpdateSchema | PostUpdatePartialSchema,
         partial: bool,
     ) -> Optional[Post]:
+        logger.debug("Обновляем пост #%d ...", post.id)
 
         for key, value in update_data.model_dump(
             exclude_none=partial,
             exclude_unset=partial,
         ).items():
             if not hasattr(post, key):
-                logger.error(f"Некорректное поле для обновления: {key}")
-                raise BadValidationException(f"Некорректное поле для обновления: {key}")
+                logger.error("Некорректное поле для обновления: %s", key)
+                raise BadValidationException(
+                    "Некорректное поле для обновления: %s", key
+                )
             setattr(post, key, value)
 
         await self.session.commit()
@@ -112,7 +128,7 @@ class PostRepository:
         return post
 
     async def delete_post(self, post: Post) -> None:
-        logger.debug(f"Удаляем пост: {post}")
+        logger.debug("Удаляем пост #%d ...", post.id)
         stmt = delete(Post).filter_by(id=post.id, user_id=post.user_id)
         await self.session.execute(stmt)
         await self.session.commit()

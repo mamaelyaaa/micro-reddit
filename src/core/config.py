@@ -19,7 +19,7 @@ class RunConfig(BaseModel):
 
 class ApiConfig(BaseModel):
     title: str = "Micro-reddit"
-    version: str = "0.4-dev"
+    version: str = "0.4"
 
 
 class FilesConfig(BaseModel):
